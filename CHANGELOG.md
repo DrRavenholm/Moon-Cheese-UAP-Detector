@@ -1,27 +1,47 @@
 # Moon Cheese UAP Detector — Release History
 
-This file summarises development progress. The complete history is retained in the application's `VERSION_HISTORY.md` and the versioned distribution packages.
+This page summarises the main development milestones. The application's bundled `VERSION_HISTORY.md` retains the **full, detailed version-by-version history**; earlier entries must not be replaced by this summary.
 
-## Unreleased — preparation for v1.0
+## v1.0 — preparation / not yet released
 
-Planned, **not yet shipped**:
+Public prerelease testing is focused on: an anonymous one-line GitHub installer, a fresh Raspberry Pi OS installation, current administrator-password verification, release-source publication, security checks and reliable stable-channel update/repair behaviour. **No v1.0 release has been declared or published.**
 
-- Public GitHub distribution and a one-command bootstrap installer.
-- System Health version checking, safe update and same-version repair.
-- Wi-Fi pending-selection fix and video-investigation fullscreen fix.
-- Installer final summary and broader hardware detection, including experimental Pi Zero 2 W options.
-- Official Moon Cheese icons, iPhone web-app icon and Information → About page.
-- Full regression review and hardware acceptance testing.
+## v0.9.9.5.3 — 7 November 2026 (development prerelease)
 
-## v0.9.9.4.13 — Development/test package (31 October 2026)
+- Added verification of the signed-in administrator's current password before **Update now** and **Repair current version**; **Check for updates** remains password-free.
+- Redesigned Information → About Moon Cheese using the official artwork, first-person creator biography, and grouped, responsive website/social/music/support links with local icons.
+- Corrected Help descriptions of the already-operational update system.
+- Preserved the latest-open / older-collapsed in-app Version History display and all historical entries.
+- Kept the installation archive clean of development tests, reports, upload instructions and unused original artwork.
+- GitHub upgrade to v0.9.9.5.3 and the new About page were confirmed on a physical Raspberry Pi. New password-and-repair acceptance remains to be completed.
 
-- Cloudflare Tunnel automatic connector installation fix for HTTP 403 failures.
-- Verified cleanup path for superseded Moon Cheese-managed Tunnel resources after a hostname change.
-- Improved Tunnel connector errors.
-- Help guide reorganised into application menu sections, retaining the existing 226 topics.
+## v0.9.9.5.2 — 7 November 2026 (development prerelease)
 
-**Not a production release.** Some historical tests remain failing; new paths still require real-hardware validation.
+- Added private GitHub prerelease testing support with separately stored, restricted credentials.
+- Improved privileged archive-extraction safety and permissions.
+- **Confirmed on Raspberry Pi:** real private GitHub upgrade from v0.9.9.5.1 to v0.9.9.5.2, Check for updates, and Repair current version.
 
-## Earlier development releases
+## v0.9.9.5.1 — November 2026 (development prerelease)
 
-Earlier version-specific notes are preserved in the original authorised distributions. Do not treat the dates or version numbers above as a publication of a stable release.
+- Kept Software updates and System power as separately visible System Health panels.
+- Reduced the installation archive by excluding developer-only files and unused oversized artwork.
+- Retained internal file checksums.
+
+## v0.9.9.5 — November 2026 (development prerelease)
+
+- Fixed Wi-Fi selection changes being reset by automatic status polling.
+- Corrected fullscreen investigation for detection videos, scheduled videos and time-lapses.
+- Added official Moon Cheese icon assets, Home Screen/web-app support and the About page.
+- Introduced GitHub stable-release checking and controlled update/repair infrastructure.
+- Expanded installer hardware-capability checks; non-Pi-4 hardware remains experimental pending testing.
+
+## v0.9.9.4.13 — 31 October 2026 (development prerelease)
+
+- Improved Cloudflare connector package installation, handling of HTTP 403 retrieval failures, and managed Tunnel cleanup.
+- Improved Cloudflare Tunnel errors and Help navigation.
+
+## Earlier development
+
+Earlier releases established camera monitoring, video/photograph capture, Scheduled Video, Time-lapse Studio, observation investigations, Storage Management, administrator accounts, notifications, NPM/Cloudflare integration and safe networking controls. See `VERSION_HISTORY.md` inside the corresponding full installation packages for the complete original chronology.
+
+**Reminder:** A development prerelease is not the first stable v1.0 release.

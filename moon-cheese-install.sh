@@ -1,25 +1,41 @@
 #!/usr/bin/env bash
 # Moon Cheese UAP Detector: GitHub Releases bootstrap installer.
-# Downloads and verifies the latest stable RELEASE ASSET, then runs its bundled install.sh.
+# Downloads and verifies a public RELEASE ASSET, then runs its bundled install.sh.
+# With no arguments selects latest stable; --prerelease TAG selects a named public prerelease.
 # Does not contain or replace Moon Cheese's main installer.
-# This bootstrap requires a publicly accessible GitHub repository with a stable release.
+# This bootstrap requires a publicly accessible GitHub repository and published release.
 set -Eeuo pipefail
 
 OWNER='DrRavenholm'
 REPOSITORY='Moon-Cheese-UAP-Detector'
-API="https://api.github.com/repos/${OWNER}/${REPOSITORY}/releases/latest"
+API_BASE="https://api.github.com/repos/${OWNER}/${REPOSITORY}/releases"
+RELEASE_MODE='stable'
+API="${API_BASE}/latest"
 
 if [[ ${1:-} == '--help' || ${1:-} == '-h' ]]; then
   printf '%s\n' 'Moon Cheese UAP Detector GitHub installer' \
-    'Usage: sudo bash moon-cheese-install.sh' \
-    'Downloads the latest published stable release, verifies its SHA-256 digest,' \
+    'Usage: sudo bash moon-cheese-install.sh [--prerelease vX.Y.Z]' \
+    'By default downloads the latest stable release. With --prerelease, downloads' \
+    'the named publicly published test release (no GitHub login needed).' \
+    'Verifies its SHA-256 digest,' \
     'extracts the complete package, and runs its original install.sh.' \
-    'A public stable GitHub Release is required; private/draft/prerelease assets' \
-    'cannot be downloaded anonymously by this script.'
+    'A public repository and published release are required; private and draft' \
+    'assets cannot be downloaded anonymously.'
   exit 0
 fi
 
-[[ $# -eq 0 ]] || { echo 'Unknown argument. Try --help.' >&2; exit 2; }
+if [[ $# -eq 2 && $1 == '--prerelease' ]]; then
+  RELEASE_TAG="$2"
+  if [[ ! $RELEASE_TAG =~ ^v[0-9]+(\.[0-9]+){2,5}$ ]]; then
+    echo 'The prerelease tag must be a version, such as v0.9.9.5.3.' >&2
+    exit 2
+  fi
+  RELEASE_MODE='prerelease'
+  API="${API_BASE}/tags/${RELEASE_TAG}"
+elif [[ $# -ne 0 ]]; then
+  echo 'Unknown argument. Try --help.' >&2
+  exit 2
+fi
 [[ $EUID -eq 0 ]] || { echo 'Please run this installer using sudo.' >&2; exit 1; }
 
 for command_name in curl python3 tar sha256sum mktemp; do
@@ -32,15 +48,19 @@ done
 WORK_DIR="$(mktemp -d -t moon-cheese-download.XXXXXXXX)"
 trap 'rm -rf -- "$WORK_DIR"' EXIT
 
-printf '%s\n' 'Checking GitHub for the latest stable Moon Cheese release...'
+if [[ $RELEASE_MODE == 'stable' ]]; then
+  printf '%s\n' 'Checking GitHub for the latest stable Moon Cheese release...'
+else
+  printf 'Checking GitHub for published Moon Cheese prerelease %s...\n' "$RELEASE_TAG"
+fi
 if ! curl --fail --silent --show-error --location --retry 2 \
      --connect-timeout 10 --max-time 45 \
      --header 'Accept: application/vnd.github+json' \
      --header 'User-Agent: Moon-Cheese-Installer' \
      --output "$WORK_DIR/release.json" "$API"; then
   cat >&2 <<'MSG'
-Could not retrieve the latest Moon Cheese stable release.
-The repository may still be private, or no stable release has been published.
+Could not retrieve the selected Moon Cheese release.
+The repository may still be private, or the requested release may not be published.
 No installation changes were made.
 MSG
   exit 1
@@ -48,7 +68,7 @@ fi
 
 # The release must contain the exact versioned *installer package* asset,
 # not the automatic source code archive created by GitHub.
-if ! python3 - "$WORK_DIR/release.json" > "$WORK_DIR/release-fields.txt" <<'PY'
+if ! python3 - "$WORK_DIR/release.json" "$RELEASE_MODE" "${RELEASE_TAG:-}" > "$WORK_DIR/release-fields.txt" <<'PY'
 import json
 import re
 import sys
@@ -57,9 +77,16 @@ from urllib.parse import urlsplit
 try:
     with open(sys.argv[1], encoding='utf-8') as handle:
         release = json.load(handle)
-    if release.get('draft') or release.get('prerelease'):
-        raise ValueError('The returned release is not a stable release.')
+    mode, requested_tag = sys.argv[2], sys.argv[3]
+    if release.get('draft'):
+        raise ValueError('Draft releases are not installable.')
+    if mode == 'stable' and release.get('prerelease'):
+        raise ValueError('The latest-stable endpoint returned a prerelease.')
+    if mode == 'prerelease' and not release.get('prerelease'):
+        raise ValueError('The requested release is not marked as a prerelease.')
     tag = release['tag_name']
+    if mode == 'prerelease' and tag != requested_tag:
+        raise ValueError('The returned prerelease tag does not match the requested tag.')
     if not isinstance(tag, str) or not re.fullmatch(r'v\d+(?:\.\d+){2,5}', tag):
         raise ValueError('The release tag is not a supported version number.')
     package_name = 'moon-cheese-uap-detector-' + tag + '.tar.gz'
