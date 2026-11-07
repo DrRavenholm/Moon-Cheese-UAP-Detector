@@ -1,3 +1,14 @@
+## v1.0.0 — First Public Stable Release
+**Date:** 7 November 2026
+
+- First official public stable release of Moon Cheese UAP Detector, built directly from the authorised v0.9.9.5.3 software package.
+- Public one-line installation uses the existing GitHub bootstrap to select the latest stable version, download the complete release archive, verify GitHub's SHA-256 asset digest and run the established full installer. No GitHub login or personal access token is required for public releases.
+- Complete source, installer, services, licence and third-party notices prepared for a matching public GitHub source tag. The release archive retains its internal `SHA256SUMS` and the separate compressed-archive checksum.
+- Preserved administrator-password confirmation for Update and Repair and password-free Check for updates, with both maintenance panels independently visible.
+- Preserved the approved About page, all 15 destination links, Help topics, newest-open/older-collapsed Version History and every preceding version entry.
+- No changes to the established camera detector, recording, network worker, Cloudflare/NPM, media database, storage, user credentials or backup/rollback logic.
+- **Release validation:** The user confirmed public anonymous prerelease fresh installation and a GitHub upgrade to v0.9.9.5.3; deliberately incorrect passwords were rejected. v1.0.0 stable-channel upgrade and same-version Repair with a correct password require live acceptance after the matching stable release is published. Alternative Pi hardware remains experimental until tested.
+
 ## v0.9.9.5.3 — Administrator Update Confirmation and About Page Redesign
 **7 November 2026**
 

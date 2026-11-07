@@ -1,39 +1,34 @@
-# Moon Cheese UAP Detector — v1.0 readiness and future plans
+# Moon Cheese UAP Detector — v1.0.0 Release Status and Roadmap
 
-**Current authorised test version: v0.9.9.5.3 (7 November 2026).** This is a status and acceptance checklist, not a claim that v1.0 has been released.
+**Current prepared release: v1.0.0 (7 November 2026).** This is a public stable-release build awaiting final confirmation on the actual published release. The user-tested v0.9.9.5.3 baseline is preserved.
 
-## Already implemented
+## Implemented and physically confirmed on Raspberry Pi
 
-- Raspberry Pi 4 reference installation; sky-monitoring detector, original MP4s, photographs, observation review, Scheduled Video and Time-lapse Studio.
-- Fullscreen investigation on the detection, scheduled-video and time-lapse viewers, with direct frame PNG download.
-- Storage Management with its established five tabs, protected media and configurable retention.
-- User accounts, per-user notifications/reports, opt-in Web Push and SMTP, and administrator-approved public sharing.
-- Cloudflare Tunnel, NPM/SSL/DNS/DDNS integration and network rollback capabilities, with substantial physical Raspberry Pi testing of their established workflows.
-- Wi-Fi radio selection fix and official Moon Cheese icon/Home Screen assets.
-- Responsive Information → About Moon Cheese page, including approved first-person bio and link cards.
-- Administration → System Health GitHub update checking, controlled upgrade and same-version repair. The private v0.9.9.5.1 → v0.9.9.5.2 upgrade/repair passed physical tests; v0.9.9.5.3 upgrade and About page have subsequently been observed working on the physical Pi.
-- Administrator password required before Update or Repair in v0.9.9.5.3 (physical confirmation pending).
+- Camera-based sky monitoring, recording, photography and web dashboard are established; Scheduled Video and Time-lapse Studio remain distinct observation tools.
+- Observation review, MP4 investigations/fullscreen, direct PNG frame exports, five-tab Storage Management, email/Web Push, user accounts and optional sharing are implemented.
+- NPM/Cloudflare/DDNS, Tunnel hostname changes and Wi-Fi enable/disable were tested in the earlier release series; all source code is retained.
+- Private GitHub v0.9.9.5.1 → v0.9.9.5.2 upgrade, in-app Check for updates and same-version Repair passed on the user's Pi.
+- GitHub upgrade to v0.9.9.5.3 and the redesigned About Moon Cheese page passed user acceptance.
+- A public, anonymous version-pinned prerelease installation of v0.9.9.5.3 from a clean SD card **passed**; no GitHub login, token or manual PC transfer was required.
+- Entering a deliberately incorrect administrator password produced **Denied** in v0.9.9.5.3.
 
-## Remaining v1.0 acceptance
+## Final v1.0.0 stable-release acceptance
 
-1. Confirm v0.9.9.5.3 rejects incorrect Update/Repair passwords, accepts the correct password and completes a same-version repair without losing settings or recordings.
-2. Test a **clean Raspberry Pi OS installation from an anonymous public GitHub prerelease**, using the single-line bootstrap. Retain the original working SD card untouched.
-3. Publish the **complete corresponding application source** at the correct Git release tag under GPLv3; verify licence and third-party notices. The starter repository files alone are **not** complete application source.
-4. Check repository and release history for embedded credentials, private deployment details, unwanted instructions and unnecessary media **before switching visibility to public**.
-5. Run regression and installer-safety checks, including verification of any genuinely outstanding historical test failures. Confirm update notices and documented backups/repair/recovery paths.
-6. Verify the public **stable** one-line bootstrap on a clean Pi after a stable candidate is ready; validate the release asset filename, GitHub digest, internal checksums and correct installation summary.
-7. Decide whether a distinct initial setup wizard remains required by the original v1.0 acceptance scope; avoid duplicating already working System Administration workflows.
-8. Where practical, test the icon on an iPhone Home Screen shortcut. Do not claim broader hardware support until physical testing.
+1. Commit the matching complete source from this build to the GitHub Code page; check public repository history and release assets for private data. **Create v1.0.0 tag only after the matching source commit.**
+2. Upload the complete `moon-cheese-uap-detector-v1.0.0.tar.gz` and its external `SHA256SUMS` as the **only manual GitHub release assets** and publish the release as **stable**, not prerelease.
+3. On a clean test SD card, run the ordinary one-line installer **without** `--prerelease`, then confirm dashboard version, sign-in, camera, full-resolution capture and initial installation summary.
+4. On the existing/test machine, check v1.0.0's public stable channel. Ensure a deliberately incorrect administrator password is rejected and a **correct** administrator password allows same-version Repair to complete with preserved user data. Existing private testing credentials must be disabled explicitly before testing stable-channel checks on an earlier device.
+5. Verify camera recordings, scheduled video/time-lapse, saved media, existing network configuration, notifications, backups and recovery on representative hardware. Keep the established working SD card until the new release is accepted.
+6. Confirm no unexpected regressions from historical tests; distinguish source/static validation from actual Pi hardware and network testing. A final security review of public repository history and deployed configuration is still required; a token-pattern scan cannot replace it.
 
-## Experimental platforms
+## Hardware status
 
-Raspberry Pi 5, Pi Zero 2 W / Raspberry Pi OS Lite and selected compatible Debian-based single-board computers have capability-aware installation paths but require hardware-specific acceptance. Document experimental status rather than blocking every Raspberry Pi 4 release on all hardware combinations.
+Raspberry Pi 4 on 64-bit Raspberry Pi OS is the proven reference. Pi 5, Pi Zero 2 W / Raspberry Pi OS Lite, the iPhone Home Screen web app experience and other Debian-based SBCs have experimental/unverified aspects and must not be advertised as universally tested. Hardware-specific validation can continue after the Pi 4 stable baseline is accepted.
 
-## Deferred to v2.0
+## Future roadmap
 
-- Multi-device sharing and coordinated observation.
-- Alternative mounted media destinations, expandable storage selection and NAS/network media migration.
+**Reserved for v2.0:** multi-device coordination/sharing; alternate mounted storage locations, NAS storage and related data migration. Do not introduce these into the first stable release.
 
-## Development and release principles
+## Development rules
 
-Preserve tested detector, camera ownership, networking, media and user data; make targeted changes only with explicit authorisation; release complete install/upgrade/repair archives; do not include developer reports, tests, upload-instruction files, personal credentials or unused artwork in public installation assets.
+Each authorised release is a complete install/upgrade/repair package; preserve credentials, databases, media, user configuration, cloud/network state and backups. Keep tests, test reports, development/upload instructions, unused oversized artwork and deployment secrets outside public installer archives and GitHub source. Older Version History entries and Help topics are retained.

@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. The latest authorised development version at the time of these instructions is **v0.9.9.5.3**; v1.0 is not yet released.
+This page covers the intended **one-command public installation** and its prerelease testing variant. The v1.0.0 installer and source are prepared as a release candidate. The stable command becomes live once the matching public stable GitHub Release is published.
 
 ## Before installation
 
@@ -12,7 +12,7 @@ This page covers the intended **one-command public installation** and its prerel
 
 ## Public prerelease test — anonymous, one command
 
-Once this repository is public and the named release is **published** (not draft) and marked **Pre-release**, open a terminal/SSH session on the clean Pi and run:
+This **already passed** on a clean test Pi against public `v0.9.9.5.3`. For reference, the version-pinned prerelease command is:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
@@ -24,7 +24,7 @@ If you later want to test a different published prerelease, change only the tag 
 
 ## Public stable installation — v1.0 and later
 
-Once an approved public stable release is published and the clean installation has been accepted, the permanent one-line command is:
+Once the v1.0.0 stable Release is published with both required assets and its source tag, test the actual permanent one-line command on a clean SD card:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
@@ -57,3 +57,7 @@ For an existing installation, the dashboard's **Software updates** panel support
 - Do not put GitHub tokens or Cloudflare credentials in any installer script, GitHub Issue, or public file.
 
 For the maintainer's source and release preparation requirements, see [Publishing releases](RELEASING.md).
+
+## v1.0.0 acceptance check
+
+After the stable release is public, verify the dashboard displays **v1.0.0**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v0.9.9.5.3 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.

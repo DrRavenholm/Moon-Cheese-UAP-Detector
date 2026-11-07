@@ -6,13 +6,13 @@ Moon Cheese UAP Detector combines automatic camera monitoring with tools to capt
 
 A detection is **not** identification, and Moon Cheese does not claim to prove that any recorded object or event is unexplained.
 
-> **Release status — v1.0 preparation:** The latest authorised test build is **v0.9.9.5.3**. An anonymous public-prerelease one-line clean installation has been confirmed on a test device; final acceptance continues. **v1.0 is not yet a published stable release.**
+> **v1.0.0 stable release candidate:** Built from the Raspberry Pi-tested v0.9.9.5.3 baseline. Publish the matching source and stable release assets before using the normal one-line installer. The previous anonymous public prerelease installation worked; v1.0.0 stable-channel acceptance remains pending until published and tested.
 
 ## Install Moon Cheese
 
 ### One-line installation — latest stable release
 
-Once the first public stable release is published, install on a supported Raspberry Pi OS system with:
+After v1.0.0 is published as a stable GitHub Release, install on a supported Raspberry Pi OS system with:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
@@ -20,11 +20,11 @@ curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detecto
 
 The bootstrap downloads the latest **stable** GitHub Release's complete Moon Cheese installation archive, checks the SHA-256 asset digest, validates the archive structure, then runs the archive's original `install.sh`. It is designed for clean installations as well as existing-installation upgrades; the main installer retains responsibility for backups and service setup.
 
-**This normal command does not select prereleases.** Do not present it as a working stable installer until a stable release has been published and tested.
+**This normal command does not select prereleases.** It must be tested against the actual published stable release on a clean test Raspberry Pi before declaring v1.0.0 accepted.
 
 ### One-line installation — public prerelease testing
 
-To test the *actual anonymous GitHub download and fresh-install process* before v1.0, use the prerelease command below on a freshly prepared test Raspberry Pi **after this repository is public and the `v0.9.9.5.3` GitHub Release is published as a prerelease**:
+The previous anonymous GitHub fresh-install test **passed** using this exact public v0.9.9.5.3 prerelease command on a clean Raspberry Pi:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
@@ -32,7 +32,7 @@ curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detecto
 
 This uses the **same bootstrap**, checksum checks and packaged installer as the stable command; the flag selects a specific public prerelease instead of GitHub's latest stable release. **No GitHub login, token, PC download or manual file transfer is required.**
 
-Prereleases are for testing. Use a **separate SD card or test device** until the clean-install checks pass. Public testing does not mean the software has completed v1.0 acceptance.
+Prereleases remain available for testing. They do not substitute for final acceptance of the stable v1.0.0 release.
 
 See [Installation and requirements](docs/INSTALLATION.md) for more information.
 
@@ -51,7 +51,7 @@ Moon Cheese includes contextual Help and a full in-app Version History. Network 
 
 ## Hardware and release status
 
-**Primary reference platform:** Raspberry Pi 4 running supported 64-bit Raspberry Pi OS, with compatible camera hardware. The application has been used and upgraded successfully on the physical Pi 4 test system.
+**Primary reference platform:** Raspberry Pi 4 running supported 64-bit Raspberry Pi OS, with compatible camera hardware. GitHub upgrades, the previous private repair, and an anonymous one-line prerelease fresh installation have been tested successfully on Raspberry Pi hardware.
 
 Raspberry Pi 5, Pi Zero 2 W / Raspberry Pi OS Lite, and other compatible Debian-based single-board computers have experimental installer support but **have not all passed real-hardware acceptance tests**. Camera capabilities and available frame rates depend on the exact sensor and system.
 
@@ -77,4 +77,4 @@ Created by **Dr Ravenholm**, the person behind [Transparent-Aluminium.net](https
 
 Moon Cheese UAP Detector is distributed under the **GNU General Public License v3.0**. See [`LICENSE`](LICENSE) and the attribution notices accompanying the application.
 
-The **complete corresponding application source** for v0.9.9.5.3 is provided in the versioned release `.tar.gz` archive and mirrored in the repository under `uap/`, `systemd/`, `npm/`, `install.sh`, `upgrade.sh`, `VERSION_HISTORY.md` and `THIRD_PARTY_NOTICES.md`. The archive is the complete, verified installation package. GitHub automatically generated **Source code** ZIP and TAR files contain the repository snapshot at the tag: older tags may predate this source-tree publication. For future releases, the application source must be committed before its release tag is created.
+The official versioned `.tar.gz` is both the **full installation package and the complete matching source snapshot**. It contains the public GitHub landing page, `docs/`, the bootstrap script, the full `uap/`, `systemd/` and `npm/` source, licence and third-party notices, plus the internal checksums. The main installer installs only the runtime components it needs; repository pages are included for source parity. The maintainer updates the GitHub Code page **from that same extracted archive**, in batches if needed, before creating a release tag. The tag must point to that exact source commit. GitHub's automatically generated source downloads are distinct from the versioned installation asset.

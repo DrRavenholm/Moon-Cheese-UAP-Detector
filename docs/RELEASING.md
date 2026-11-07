@@ -18,6 +18,12 @@ Before **any public release**, including a prerelease, the repository should con
 
 Do **not** commit production credentials, private tokens, home IPs, SQLite user databases, personal media, development test reports, oversized unused artwork or `UPLOAD_INSTRUCTIONS.txt`.
 
+## One canonical release source
+
+For each authorised version, build **one versioned complete `.tar.gz`** from one source tree. The archive contains both the install/runtime files and **every GitHub Code source/documentation file**. Its internal `SHA256SUMS` lists all files except itself. Publish one separate external `SHA256SUMS` for the compressed archive. Do not generate a different GitHub source ZIP: there must be no separate source set to drift out of sync.
+
+To publish, extract **that exact release archive** on the PC. In the GitHub **Code** tab, upload the *contents* of the extracted version directory, preserving relative paths, in batches of at most 100 files; `uap/` can be one batch and the other top-level files/folders another. Commit the complete source **before** creating the version tag, and verify that the tag matches that commit. Then upload **only** the versioned `.tar.gz` and the external `SHA256SUMS` to GitHub Releases. Never upload the `.tar.gz` into the Code tab, the internal checksum as an additional Release asset, or unrelated development reports, test folders, `UPLOAD_INSTRUCTIONS.txt`, credentials or local deployment data.
+
 ## GitHub Release format
 
 For test release `v0.9.9.5.3`:
@@ -26,10 +32,10 @@ For test release `v0.9.9.5.3`:
 - Release checkbox: **Set as a pre-release**.
 - Uploaded Assets: `moon-cheese-uap-detector-v0.9.9.5.3.tar.gz` and `SHA256SUMS` only.
 
-For future stable `v1.0.0`:
+For **this** stable `v1.0.0`:
 
 - Tag: `v1.0.0` pointing to the approved corresponding source commit.
-- Publish as **stable** only after acceptance, not as a draft or prerelease.
+- Publish as **stable** when the matching code and checksum assets are ready so anonymous normal-channel installation and Repair can be tested; do not publicly announce final acceptance before those real tests pass.
 - Uploaded Assets: `moon-cheese-uap-detector-v1.0.0.tar.gz` and matching `SHA256SUMS` only.
 
 The versioned archive is the **complete installation package**, not GitHub's automatically generated Source code archive. The actual distribution package includes an internal `SHA256SUMS` and all necessary install/runtime files. Keep developer test reports outside public release assets.
@@ -39,15 +45,15 @@ The versioned archive is the **complete installation package**, not GitHub's aut
 1. Confirm the version is authorised and the application archive was produced from the corresponding approved source.
 2. Verify the external `SHA256SUMS` and the internal package checksums, archive safety, installation scripts and release notes.
 3. Verify the repo's tag points to the correct complete source commit, under GPLv3 with third-party attributions and no secrets.
-4. Publish a **public prerelease** for the final anonymous one-line installation tests, leaving stable selection unchanged.
-5. Test on a clean SD card using:
+4. The public prerelease v0.9.9.5.3 anonymous installer has already passed. For v1.0.0, create its tag from the updated corresponding source and publish a **stable** release so the actual `latest` command can be tested.
+5. Test v1.0.0 on a clean SD card with the **normal stable** command:
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
+   curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
    ```
 
 6. Verify dashboard, camera, login, recording, password-protected update/repair, preservation of data and installer summary as appropriate to fresh/upgrade tests.
-7. Once approved, release `v1.0.0` stable and verify on a clean system using:
+7. Also test **Repair current version** on v1.0.0 with a deliberately incorrect password (must be refused) and the signed-in administrator's correct password (must complete). Confirm existing user data survives upgrade/repair. The same stable installation command is:
 
    ```bash
    curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
@@ -55,4 +61,4 @@ The versioned archive is the **complete installation package**, not GitHub's aut
 
 ## Integrity and security
 
-The bootstrap validates GitHub's SHA-256 digest and checks archive structure before delegating to `install.sh`. The paired external checksum file and internal package checksums remain required release artefacts. These checks protect integrity but are not a substitute for publisher identity verification. Complete source publication, third-party licences and independent security review are v1.0 requirements.
+The bootstrap validates GitHub's SHA-256 digest and checks archive structure before delegating to `install.sh`. The paired external checksum file and internal package checksums remain required release artefacts. These checks protect integrity but are not a substitute for publisher identity verification. Complete corresponding GPLv3 source and third-party notices must be present under the tag. This static review is not an independent penetration test; evaluate production deployment security before wide distribution.

@@ -1,6 +1,6 @@
 # Moon Cheese — Software updates and repair
 
-**Implemented in the pre-v1.0 application.** This page documents the current functionality and remaining production checks. It is **not** a proposal for a future update system.
+**Implemented in Moon Cheese v1.0.0.** This page describes the actual Software updates implementation, separate public stable and optional private-testing channels, and the required first-stable Pi acceptance.
 
 ## Administration → System Health
 
@@ -26,13 +26,14 @@ Before retiring private testing, deliberately switch the test Pi back to the nor
 
 The root-owned update worker downloads the complete versioned application archive and its integrity information, validates the release and archive, checks for unsafe active operations, and delegates to the **same installer** used for fresh installation and repair. The installer preserves configured user data and creates backups according to its upgrade workflow. Status is reported back to the dashboard.
 
-**Physical Raspberry Pi confirmation:** private GitHub upgrade v0.9.9.5.1 → v0.9.9.5.2, a subsequent update check and a same-version repair passed. v0.9.9.5.3 was later installed successfully via GitHub; the new administrator-password and repair interactions still require user acceptance testing.
+**Physical Raspberry Pi confirmation:** private GitHub upgrade v0.9.9.5.1 → v0.9.9.5.2, a subsequent update check and a same-version repair passed. v0.9.9.5.3 later upgraded successfully and a public anonymous one-line fresh installation also passed. A deliberately wrong administrator password was rejected. Correct-password Repair with the published v1.0.0 stable asset remains to be confirmed.
 
-## Remaining v1.0 verification
+## Final v1.0.0 stable-channel checks
 
-- Confirm the v0.9.9.5.3 password flow and same-version repair on the physical Pi.
-- Validate anonymous public fresh installation and public stable-channel upgrade/repair behaviour.
-- Verify scheduled update notifications follow each administrator's existing configured observation-summary time, without duplicate alerts.
-- Review failure/rollback, release-source completeness, release authenticity and secret-handling before publication as stable.
+- Publish matching source and a stable v1.0.0 GitHub Release containing the versioned complete archive plus external `SHA256SUMS`.
+- Test the **normal** anonymous one-line installer on a clean Raspberry Pi without `--prerelease`; public prerelease installation has already been confirmed.
+- Confirm incorrect-password rejection and **successful** correct-password same-version Repair with the stable v1.0.0 asset on the test device.
+- Verify scheduled update notices at the existing administrator-configured observation-summary time, without duplicate alerts; confirm stored settings and backup/rollback after actual upgrade.
+- Inspect published source and repository history for private material and review failure paths; checksums alone are not a publisher signature.
 
 GitHub SHA-256 digests and `SHA256SUMS` detect mismatched content, but do not alone establish independent publisher authenticity. Never automatically execute an update merely because a new release appears.

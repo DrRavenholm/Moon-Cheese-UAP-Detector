@@ -1,6 +1,6 @@
 # Security policy
 
-Moon Cheese UAP Detector is currently in final pre-v1.0 testing. Public GitHub availability and published prereleases **do not imply completed production security acceptance**.
+Moon Cheese UAP Detector v1.0.0 is prepared for first public stable distribution. Public access or a stable GitHub Release does **not** by itself guarantee that every deployment has passed its own network/security acceptance. The official Raspberry Pi 4 reference and published-stable upgrade/repair tests must be distinguished from experimental hardware support.
 
 ## Reporting a security issue
 
@@ -16,4 +16,4 @@ If the repository has GitHub **Private vulnerability reporting** enabled, use th
 - Public installers require **no personal GitHub token**.
 - Verify downloads and use the project's official repository and release assets. Checksums detect unintended changes; they are not an independent cryptographic signature of the publisher.
 
-Source, dependency/licence, fresh-install and release-integrity review remain part of the v1.0 readiness process.
+The published archive must correspond to the tagged complete GPLv3 source. Review repository history and release assets before publication; static token-pattern checks are not a comprehensive security audit.

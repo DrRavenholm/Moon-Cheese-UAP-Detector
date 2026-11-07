@@ -2,9 +2,13 @@
 
 This page summarises the main development milestones. The application's bundled `VERSION_HISTORY.md` retains the **full, detailed version-by-version history**; earlier entries must not be replaced by this summary.
 
-## v1.0 — preparation / not yet released
+## v1.0.0 — 7 November 2026 (stable release candidate)
 
-Public prerelease testing is focused on: an anonymous one-line GitHub installer, a fresh Raspberry Pi OS installation, current administrator-password verification, release-source publication, security checks and reliable stable-channel update/repair behaviour. **No v1.0 release has been declared or published.**
+- First public stable-release package, built directly from the Raspberry Pi-tested v0.9.9.5.3 software.
+- Public anonymous GitHub one-line installer now targets the latest stable release when published; the exact prerelease test path was previously proven on a clean Pi.
+- Retains password-protected software Update/Repair, full-resolution photos, detector, Scheduled Video, Time-lapse Studio, About page and comprehensive Help/Version History.
+- Matching full corresponding GPLv3 source and third-party notices prepared for a tag on the updated Code branch.
+- No detector, network, camera or user-data migration changes; acceptance of v1.0.0 stable-channel repair must follow publication.
 
 ## v0.9.9.5.3 — 7 November 2026 (development prerelease)
 
@@ -13,7 +17,7 @@ Public prerelease testing is focused on: an anonymous one-line GitHub installer,
 - Corrected Help descriptions of the already-operational update system.
 - Preserved the latest-open / older-collapsed in-app Version History display and all historical entries.
 - Kept the installation archive clean of development tests, reports, upload instructions and unused original artwork.
-- GitHub upgrade to v0.9.9.5.3 and the new About page were confirmed on a physical Raspberry Pi. New password-and-repair acceptance remains to be completed.
+- GitHub upgrade to v0.9.9.5.3 and the new About page were confirmed on a physical Raspberry Pi. Incorrect-password rejection was user-confirmed; correct-password Repair awaits a discoverable stable release.
 
 ## v0.9.9.5.2 — 7 November 2026 (development prerelease)
 
