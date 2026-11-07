@@ -1,48 +1,38 @@
-# Planned Moon Cheese update and repair system
+# Moon Cheese — Software updates and repair
 
-**Design note only — not implemented in v0.9.9.4.13.**
+**Implemented in the pre-v1.0 application.** This page documents the current functionality and remaining production checks. It is **not** a proposal for a future update system.
 
-Official repository: `DrRavenholm/Moon-Cheese-UAP-Detector`.
+## Administration → System Health
 
-## System Health user interface
+**Software updates** and **System power** are separate, always-visible panels.
 
-Keep the compact design previously approved: a collapsible **Software updates** section displaying Installed version, Latest available stable release, last check, last update result and release notes. Use three adjacent controls: **Check for updates**, **Update now**, and **Repair current version**. No long checkbox confirmations.
+The Software updates panel displays the installed version, available release information and update/repair status, with:
 
-Only authenticated administrators can perform updates or repairs, with server-side permission enforcement. Public/viewer roles must never see update credentials or gain privileges.
+- **Check for updates:** reads GitHub release information. No extra administrator-password prompt is required.
+- **Update now:** installs an approved available version only after verification of the signed-in administrator's current password.
+- **Repair current version:** re-runs the verified complete installer for the installed version, again requiring the current administrator password.
 
-## Checks and notifications
+An incorrect or missing password prevents the privileged action from being queued and should produce an inline message. Administrators initiate installations themselves; checking does **not** trigger automatic installation. Viewer/public accounts have no permission to run these operations.
 
-- Query the latest published stable GitHub Release over HTTPS. Ignore drafts and prereleases by default.
-- Compare version numbers numerically, not lexicographically; use an explicit dev/prerelease channel only when separately enabled.
-- Use the configured Observation summary preferences time for scheduled checks and administrator update notifications; avoid duplicate messages about the same release.
-- Checking does not automatically install; administrator chooses Update now.
+## Channels
 
-## Safe update / repair
+- **Normal public channel:** checks the latest published **stable** GitHub Release. GitHub excludes prereleases from its latest-stable endpoint.
+- **Private testing channel:** uses a restricted, explicitly enabled read-only GitHub access token stored on the Pi, never distributed in archives. It supports authorised private prereleases and was used successfully for the v0.9.9.5.2 acceptance test.
+- **Anonymous bootstrap prerelease test:** the separate `moon-cheese-install.sh --prerelease TAG` command selects a *published public prerelease*. This is for a **clean installation test**, and does not itself change the in-app updater's stable/private channel selection.
 
-1. Validate administrator authorisation and download only the exact official release asset.
-2. Validate version, published metadata, archive contents, SHA-256 and (once introduced) publisher's release signature using a pinned trusted public key.
-3. Check disk space and absence of active recordings, time-lapse rendering or other unsafe jobs.
-4. Back up current application code, configuration, auth and a consistent SQLite snapshot. Preserve media, credentials, networking and NPM state.
-5. Run the already-proven `install.sh` from the release; do not replace it with a new installer.
-6. Verify services, dashboard and installed version. Report progress and actionable errors within System Health.
-7. On failure, provide a tested rollback/recovery route. Record a local update log; do not expose secrets to the UI.
-8. Repair current version re-installs the *same* version from its corresponding verified asset, preserving all user data.
+Before retiring private testing, deliberately switch the test Pi back to the normal stable channel. Do not publish any stored private token.
 
-Avoid restarting the application's own dashboard process until the status can be recovered on reload; a privileged independent updater is needed. Never allow the web process to execute arbitrary shell commands or arbitrary user-chosen release URLs.
+## Installation and protection
 
-## Signing keys
+The root-owned update worker downloads the complete versioned application archive and its integrity information, validates the release and archive, checks for unsafe active operations, and delegates to the **same installer** used for fresh installation and repair. The installer preserves configured user data and creates backups according to its upgrade workflow. Status is reported back to the dashboard.
 
-- Public releases do not require users to have personal GitHub tokens.
-- A separate **release-signing key pair** is recommended for production. Generate it privately on the maintainer's own trusted computer using a supported signing tool, keep the PRIVATE key outside GitHub and application archives, back it up securely, and include only the PUBLIC verification key in the trusted updater/bootstrap.
-- Record a key rotation plan. Neither key is required for today's initial repository upload.
-- GitHub Actions workflows can generally use their automatically provided `GITHUB_TOKEN` with minimum permissions, rather than a manually created personal access token.
-- Private-repository release tests require separately arranged authenticated access; never embed a personal access token in the public installer or a distributed detector.
+**Physical Raspberry Pi confirmation:** private GitHub upgrade v0.9.9.5.1 → v0.9.9.5.2, a subsequent update check and a same-version repair passed. v0.9.9.5.3 was later installed successfully via GitHub; the new administrator-password and repair interactions still require user acceptance testing.
 
-## Release format
+## Remaining v1.0 verification
 
-- Git tag: `v1.0.0`
-- Complete release asset: `moon-cheese-uap-detector-v1.0.0.tar.gz`
-- Checksum asset: `moon-cheese-uap-detector-v1.0.0.tar.gz.sha256`
-- Corresponding source included in the repository at the release tag, consistent with GPLv3.
+- Confirm the v0.9.9.5.3 password flow and same-version repair on the physical Pi.
+- Validate anonymous public fresh installation and public stable-channel upgrade/repair behaviour.
+- Verify scheduled update notifications follow each administrator's existing configured observation-summary time, without duplicate alerts.
+- Review failure/rollback, release-source completeness, release authenticity and secret-handling before publication as stable.
 
-The bootstrap installer bundled with this starter kit only implements **public latest-stable download, GitHub SHA-256 check, safe archive structure validation and hand-off to the existing `install.sh`**. It does not yet implement release-signature verification or the System Health updater.
+GitHub SHA-256 digests and `SHA256SUMS` detect mismatched content, but do not alone establish independent publisher authenticity. Never automatically execute an update merely because a new release appears.
