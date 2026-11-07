@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch for authenticated UAP Detector administrative power requests
+
+[Path]
+PathExistsGlob=/var/lib/uap-detector/power-requests/*.json
+Unit=uap-power-action.service
+
+[Install]
+WantedBy=multi-user.target

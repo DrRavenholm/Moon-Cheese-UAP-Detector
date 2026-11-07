@@ -1,0 +1,23 @@
+[Unit]
+Description=UAP Detector password-protected dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=uapdetector
+Group=uapdetector
+WorkingDirectory=/opt/uap-detector/uap
+EnvironmentFile=/etc/uap-detector/environment
+RuntimeDirectory=uap-dashboard
+RuntimeDirectoryMode=0700
+Environment=TMPDIR=/run/uap-dashboard
+ExecStart=/usr/bin/gunicorn --bind 0.0.0.0:8000 --workers 1 --threads 4 --timeout 45 dashboard:app
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uap-detector
+
+[Install]
+WantedBy=multi-user.target

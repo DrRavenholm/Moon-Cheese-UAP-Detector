@@ -1,0 +1,12 @@
+[Unit]
+Description=Moon Cheese network restoration when confirmation is overdue
+After=NetworkManager.service
+ConditionPathExists=/var/lib/uap-detector/network-safety/pending.json
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/uap-network-worker recover
+TimeoutStartSec=240
+NoNewPrivileges=true
+PrivateTmp=true

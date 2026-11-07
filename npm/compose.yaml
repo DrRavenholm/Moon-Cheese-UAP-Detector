@@ -1,0 +1,17 @@
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:2.16.0
+    container_name: uap-npm
+    restart: unless-stopped
+    ports:
+      - "8080:80"                   # Local HTTP; router configuration is separate
+      - "8443:443"                  # Optional HTTPS origin after certificate setup
+      - "127.0.0.1:8181:81"        # Admin UI: SSH tunnel only
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      INITIAL_ADMIN_EMAIL: "${NPM_ADMIN_EMAIL:?Required}"
+      INITIAL_ADMIN_PASSWORD: "${NPM_ADMIN_PASSWORD:?Required}"
+    volumes:
+      - /opt/uap-detector/npm-data:/data
+      - /opt/uap-detector/npm-letsencrypt:/etc/letsencrypt

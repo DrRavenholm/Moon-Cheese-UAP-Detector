@@ -1,0 +1,12 @@
+[Unit]
+Description=Watch pending Moon Cheese address changes even after reboot
+
+[Timer]
+OnBootSec=15s
+OnUnitInactiveSec=15s
+AccuracySec=2s
+Unit=uap-network-recovery.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

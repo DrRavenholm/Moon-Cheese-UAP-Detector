@@ -1,0 +1,14 @@
+[Unit]
+Description=UAP Detector optional daily recording retention
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=uapdetector
+Group=uapdetector
+WorkingDirectory=/opt/uap-detector/uap
+ExecStart=/usr/bin/python3 /opt/uap-detector/uap/storage.py run
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uap-detector

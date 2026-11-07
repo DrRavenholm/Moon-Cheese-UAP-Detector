@@ -1,0 +1,9 @@
+[Unit]
+Description=Process one UAP Detector power request
+After=multi-user.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/uap-power-action
+TimeoutStartSec=120

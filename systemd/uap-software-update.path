@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch Moon Cheese administrator software update and repair requests
+
+[Path]
+PathExistsGlob=/var/lib/uap-detector/software-update-requests/*.json
+Unit=uap-software-update.service
+
+[Install]
+WantedBy=multi-user.target

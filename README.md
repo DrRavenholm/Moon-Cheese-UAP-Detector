@@ -6,7 +6,7 @@ Moon Cheese UAP Detector combines automatic camera monitoring with tools to capt
 
 A detection is **not** identification, and Moon Cheese does not claim to prove that any recorded object or event is unexplained.
 
-> **Release status — v1.0 preparation:** The latest authorised test build is **v0.9.9.5.3**. Public prerelease installations are being tested. **v1.0 is not yet a published stable release.**
+> **Release status — v1.0 preparation:** The latest authorised test build is **v0.9.9.5.3**. An anonymous public-prerelease one-line clean installation has been confirmed on a test device; final acceptance continues. **v1.0 is not yet a published stable release.**
 
 ## Install Moon Cheese
 
@@ -77,4 +77,4 @@ Created by **Dr Ravenholm**, the person behind [Transparent-Aluminium.net](https
 
 Moon Cheese UAP Detector is distributed under the **GNU General Public License v3.0**. See [`LICENSE`](LICENSE) and the attribution notices accompanying the application.
 
-The official versioned `.tar.gz` release asset contains the *complete installer and application distribution*; GitHub's automatically generated **Source code** downloads are not substitutes for that installation archive. The complete corresponding application source must be available for **every public distribution, including prereleases**, and matched to the release tag.
+The **complete corresponding application source** for v0.9.9.5.3 is provided in the versioned release `.tar.gz` archive and mirrored in the repository under `uap/`, `systemd/`, `npm/`, `install.sh`, `upgrade.sh`, `VERSION_HISTORY.md` and `THIRD_PARTY_NOTICES.md`. The archive is the complete, verified installation package. GitHub automatically generated **Source code** ZIP and TAR files contain the repository snapshot at the tag: older tags may predate this source-tree publication. For future releases, the application source must be committed before its release tag is created.

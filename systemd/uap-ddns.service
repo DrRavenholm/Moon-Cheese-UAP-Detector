@@ -1,0 +1,12 @@
+[Unit]
+Description=Update managed Moon Cheese Cloudflare DNS address if necessary
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/uap-network-worker ddns
+TimeoutStartSec=70
+NoNewPrivileges=true
+PrivateTmp=true

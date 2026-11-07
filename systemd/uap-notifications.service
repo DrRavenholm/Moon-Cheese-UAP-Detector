@@ -1,0 +1,15 @@
+[Unit]
+Description=UAP Detector internal summaries and administrator health checks
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=uapdetector
+Group=uapdetector
+WorkingDirectory=/opt/uap-detector/uap
+ExecStart=/usr/bin/python3 /opt/uap-detector/uap/notifications.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uap-detector
+PrivateTmp=true

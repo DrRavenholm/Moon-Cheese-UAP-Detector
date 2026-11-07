@@ -1,0 +1,20 @@
+[Unit]
+Description=UAP Detector camera motion recording (prototype)
+After=multi-user.target
+
+[Service]
+Type=simple
+User=uapdetector
+Group=uapdetector
+SupplementaryGroups=video render
+WorkingDirectory=/opt/uap-detector/uap
+ExecStart=/usr/bin/python3 /opt/uap-detector/uap/detector.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uap-detector
+
+[Install]
+WantedBy=multi-user.target

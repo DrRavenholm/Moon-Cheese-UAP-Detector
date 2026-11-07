@@ -1,0 +1,11 @@
+[Unit]
+Description=Apply Moon Cheese networking requests with separate privileges
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/uap-network-worker
+TimeoutStartSec=900
+NoNewPrivileges=true
+PrivateTmp=true

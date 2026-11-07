@@ -1,0 +1,18 @@
+[Unit]
+Description=Moon Cheese locally managed Cloudflare Tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate run --token-file /etc/uap-detector/cloudflared.token
+Restart=on-failure
+RestartSec=10s
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/etc/uap-detector/cloudflared.token
+
+[Install]
+WantedBy=multi-user.target

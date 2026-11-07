@@ -1,0 +1,11 @@
+[Unit]
+Description=UAP Detector daily optional recording cleanup
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=20m
+Unit=uap-cleanup.service
+
+[Install]
+WantedBy=timers.target

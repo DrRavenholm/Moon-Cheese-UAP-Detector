@@ -1,0 +1,12 @@
+[Unit]
+Description=Verify and install an official Moon Cheese GitHub release
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/uap-software-update
+TimeoutStartSec=3600
+NoNewPrivileges=true
+PrivateTmp=true
