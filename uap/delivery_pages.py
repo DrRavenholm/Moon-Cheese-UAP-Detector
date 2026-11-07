@@ -1,0 +1,45 @@
+"""HTML templates for opt-in notification delivery configuration."""
+
+USER_DELIVERY = '''<details class="panel setting-section" id="delivery"><summary>Email &amp; browser notifications</summary><div class="setting-content">
+<p class="note">Your existing in-dashboard notices remain available. Outgoing messages are optional: email uses the administrator's configured SMTP server, and browser push requires HTTPS, browser permission and a subscribed device. System faults are sent only to administrators.</p>
+{% if not mail_ready %}<div class="notice">Email delivery is not yet configured by the administrator. You can save a recipient address, but email will not be sent until SMTP delivery is enabled.</div>{% endif %}
+<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="delivery">
+<label>My notification email address<input name="recipient_email" type="email" maxlength="254" value="{{delivery_pref.recipient_email}}" placeholder="you@example.com"></label>
+<label class="checkline"><input type="checkbox" name="email_enabled" value="1" {% if delivery_pref.email_enabled %}checked{% endif %}> Send my scheduled reports and account notifications by email</label>
+<label class="checkline"><input type="checkbox" name="push_enabled" value="1" {% if delivery_pref.push_enabled %}checked{% endif %}> Send my notifications to subscribed browsers</label>
+<button type="submit">Save delivery preferences</button></form>
+{% if mail_ready and delivery_pref.recipient_email %}<form method="post" class="row" style="margin-top:12px"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="test_email"><button type="submit">Send a test email to me</button></form>{% endif %}
+<h3>My browser devices</h3><p class="note">A secure HTTPS page and your browser's notification permission are required. On iPhone, add this website to your Home Screen first. Subscribe each browser independently; the device will still need to enable delivery above.</p>
+<input id="push-csrf" type="hidden" value="{{csrf}}"><button type="button" id="push-register">Subscribe this browser</button><span id="push-feedback" class="note" role="status"></span>
+<script src="{{url_for('push_ui_js')}}" defer></script>
+{% for sub in browser_subs %}<form method="post" class="row" style="margin-top:8px"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="remove_push"><input type="hidden" name="sub_id" value="{{sub.id}}">
+<span>{{sub.device}} · registered {{sub.created_utc|localdt(pref.timezone)}}</span><button class="danger" type="submit">Remove</button></form>
+{% else %}<p class="note">No browser devices are subscribed to your account.</p>{% endfor %}
+{% if browser_subs %}<form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="test_push"><label>Send a test push to<select name="sub_id">{% for sub in browser_subs %}<option value="{{sub.id}}">{{sub.device}}</option>{% endfor %}</select></label><button type="submit">Send test browser notification</button></form>{% endif %}
+<h3>Recent delivery attempts</h3><p class="note">Sent means the SMTP or push provider accepted the message, not that the recipient opened it. Pending and Retry will be attempted automatically. Failed means retries were exhausted.</p>
+{% if own_delivery %}<table><thead><tr><th>Notice</th><th>Method</th><th>Result</th><th>When</th></tr></thead><tbody>
+{% for delivery in own_delivery %}<tr><td>{{delivery.title}}{% if delivery.error %}<p class="note">{{delivery.error}}</p>{% endif %}</td><td>{{delivery.channel|title}}</td><td>{{delivery.state|title}}</td><td>{{delivery.changed_utc|localdt(pref.timezone)}}</td></tr>{% endfor %}
+</tbody></table>{% else %}<p class="note">No external delivery attempts yet.</p>{% endif %}</div></details>'''
+
+ADMIN_DELIVERY = '''<details class="panel setting-section" id="outgoing-email"><summary>Outgoing email (SMTP) · {{'Enabled' if smtp.enabled else 'Not enabled'}}</summary><div class="setting-content">
+<p class="note">Configure a single sending account for all users. Each user adds their own recipient email address under Notifications. Choose TLS-encrypted SMTP with an app password/SMTP credential provided by your email service. Ordinary Microsoft consumer Outlook/Hotmail sign-in may require OAuth2, which is not available in this version.</p>
+<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="smtp_save">
+<div class="options"><div><label>SMTP server<input name="smtp_host" required maxlength="253" placeholder="smtp.example.com" value="{{smtp.host or ''}}"></label></div><div><label>Port<input name="smtp_port" type="number" required min="1" max="65535" value="{{smtp.port or 587}}"></label></div>
+<div><label>Security<select name="smtp_security"><option value="starttls" {% if smtp.security!='ssl' %}selected{% endif %}>STARTTLS — usually port 587</option><option value="ssl" {% if smtp.security=='ssl' %}selected{% endif %}>Implicit TLS — usually port 465</option></select></label></div>
+<div><label>Sender address<input name="smtp_from" required type="email" maxlength="254" value="{{smtp.from_email or ''}}"></label></div>
+<div><label>SMTP username<input name="smtp_username" required maxlength="254" value="{{smtp.username or ''}}"></label></div>
+<div><label>SMTP app password / credential<input type="password" name="smtp_secret" autocomplete="new-password" placeholder="{{'Leave blank to retain saved credential' if smtp.has_password else 'Enter your SMTP credential'}}"></label></div></div>
+<label class="checkline"><input type="checkbox" name="smtp_enabled" value="1" {% if smtp.enabled %}checked{% endif %}> Enable outgoing email</label>
+<p class="note">The secret is stored separately from configuration exports and will never be displayed again. Saving replaces SMTP configuration; leaving an existing password blank preserves it. Tests send an email to the configured sender address.</p>
+<button type="submit">Save SMTP configuration</button></form>
+{% if smtp.has_password %}<form method="post" style="margin-top:10px"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="smtp_test"><button type="submit">Send test email to sender</button></form>{% endif %}
+</div></details>
+<details class="panel setting-section" id="push-contact"><summary>Web Push administrative contact</summary><div class="setting-content"><p class="note">Browser Web Push works independently of SMTP. Enter a monitored contact email for VAPID signing so the browser push provider can contact the operator if necessary; you do not have to set up SMTP to send push.</p>
+<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="push_contact_save"><label>Push provider contact email<input name="push_contact_email" type="email" required maxlength="254" value="{{push_contact}}" placeholder="admin@example.com"></label><button type="submit">Save Web Push contact</button></form>
+</div></details>
+<details class="panel setting-section" id="delivery-diagnostics"><summary>Recent message delivery diagnostics</summary><div class="setting-content"><p class="note">Sending errors do not include passwords. Failed messages will not be retried endlessly; review settings and use test delivery to verify connectivity.</p>
+{% if admin_delivery %}<table><thead><tr><th>User</th><th>Notice</th><th>Channel</th><th>State</th><th>Attempts</th><th>Updated</th><th>Action</th></tr></thead><tbody>
+{% for d in admin_delivery %}<tr><td>{{d.username}}</td><td>{{d.title}}{% if d.error %}<p class="note">{{d.error}}</p>{% endif %}</td><td>{{d.channel|title}}</td><td>{{d.state|title}}</td><td>{{d.attempts}}</td><td>{{d.changed_utc|localdt}}</td><td>{% if d.state=='failed' %}<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="retry_delivery"><input type="hidden" name="delivery_id" value="{{d.id}}"><button type="submit">Retry</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table>{% else %}<p class="note">No external delivery attempts yet.</p>{% endif %}
+<form method="post" class="row"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="delivery_retention_save">
+<label>Keep completed delivery history for <select name="days">{% for days in [30,60,90,180] %}<option value="{{days}}" {% if retention_days==days %}selected{% endif %}>{{days}} days</option>{% endfor %}</select></label><button type="submit">Save retention</button></form>
+<p class="note"><a href="{{url_for('delivery_history')}}">View complete delivery history, filters and pages →</a> · Only completed technical delivery records are removed after the chosen period. Actual notifications are preserved.</p></div></details>'''
