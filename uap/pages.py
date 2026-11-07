@@ -16,6 +16,17 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.0','title':'First Public Stable Release','date':'7 Nov 2026',
+   'summary':'First public stable release of Moon Cheese UAP Detector, built on the Raspberry Pi-tested v0.9.9.5.3 baseline.',
+   'details':[
+     'Prepared the complete public installation, update and same-version repair release with versioned GitHub archive and checksum verification.',
+     'Retained the tested anonymous one-line GitHub bootstrap, now selecting the latest stable version without a prerelease flag or personal access token.',
+     'Retained password-protected Update and Repair, separately password-free Check for updates, and clear inline validation messages.',
+     'Kept Information → About Moon Cheese with the approved first-person biography, official artwork and accessible linked icon cards.',
+     'Published corresponding application source and licensing notices for GitHub under GPLv3; preserved all earlier release notes and their original dates.',
+     'Preserved the installed camera and detector, recording and investigation tools, Scheduled Video, Time-lapse Studio, photographs, user data, account passwords, backups and networking.',
+     'The installer continues supporting fresh installation, safe upgrades and same-version repair. Actual v1.0.0 stable-channel upgrade/repair requires final Raspberry Pi acceptance after publication.'
+   ]},
   {'version':'0.9.9.5.3','title':'Administrator Update Confirmation and About Page Redesign','date':'7 Nov 2026',
    'summary':'Protect software installation actions with administrator password confirmation and improve the About page and release documentation.',
    'details':[

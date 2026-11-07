@@ -434,7 +434,7 @@ GUIDE.extend([
 # v0.9.9.5: production-preparation topics are grouped with their real menus.
 GUIDE.extend([
  ('Installation and supported hardware', [
-   ('Fresh installation', 'Download an approved complete Moon Cheese release or use the official public GitHub bootstrap when stable releases are available. The installer verifies all package files and runs the original complete install.sh. Dashboard addresses and the sudo uapctl credentials command appear at the very end of installation.'),
+   ('Fresh installation', 'Install the current public stable Moon Cheese release using the official one-line GitHub bootstrap (no GitHub account or token needed), or download and verify the complete release archive manually. The installer verifies all package files and runs the original complete install.sh. Dashboard addresses and the sudo uapctl credentials command appear at the very end of installation.'),
    ('Experimental low-resource devices', 'Pi 4 is the tested reference hardware. Pi 5 camera frame-rate options remain hardware-aware and experimental. Pi Zero 2 W is an experimental Raspberry Pi OS Lite setup with bundled Docker/NPM disabled by default; weaker hardware may have limited performance. Other Debian-based SBCs need compatible Picamera2 and OS packages, and must be tested separately.'),
    ('Upgrades and repair', 'The complete versioned archive supports fresh install, safe upgrade and same-version repair. Existing user accounts, credentials, recording data, configured services and proxy state are preserved. The installer refuses to proceed while a recording or scheduled rendering job is active.'),
  ]),
