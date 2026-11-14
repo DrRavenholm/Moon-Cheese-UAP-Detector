@@ -133,7 +133,7 @@ def capture_still(job, rotate180=False):
         minimum=1024**3 if p['format']=='png' else 512*1024**2
         if shutil.disk_usage(ROOT).free < minimum:
             raise RuntimeError('Not enough free disk space for a full-resolution photograph')
-        state(token,'capturing','Camera switched to photography')
+        state(token,'preparing','Preparing photography camera')
         cam=Picamera2()
         native=cam.sensor_resolution
         if not native or native[0]<100 or native[1]<100:
@@ -162,9 +162,19 @@ def capture_still(job, rotate180=False):
             transform=Transform(hflip=bool(rotate180),vflip=bool(rotate180)),
             controls=knobs))
         cam.start()
+        # Status begins after camera start/configuration, not while queued or switching.
+        # Picamera2 captures asynchronously to the status reader; this duration is
+        # an estimate, not proof that sensor exposure started at this exact instant.
+        if p['mode']=='manual':
+            state(token,'exposing','Manual exposure in progress',
+                  exposure_seconds=p['exposure_ms']/1000.0,
+                  exposure_started_epoch=time.time())
+        else:
+            state(token,'capturing','Automatic photograph in progress')
         # Starting the still stream with manual controls allows capture_file
         # to wait for a full exposure. No second camera owner is created.
         cam.capture_file(str(outfile))
+        state(token,'saving','Saving photograph')
         if not outfile.is_file() or outfile.stat().st_size==0:
             raise RuntimeError('Camera did not save the photograph')
         state(token,'done','Photograph saved',format=p['format'],width=int(native[0]),height=int(native[1]),

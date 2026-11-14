@@ -16,6 +16,7 @@ from pathlib import Path
 SOURCE = Path('/opt/uap-detector/service-units')
 TARGET = Path('/etc/systemd/system')
 BACKUPS = Path('/var/backups/uap-detector/service-units')
+OPTIONAL = ('uap-cloudflared.service', 'uap-cloudflared-candidate.service')
 ALLOWED = (
     'uap-dashboard.service', 'uap-detector.service',
     'uap-cleanup.service', 'uap-cleanup.timer',
@@ -38,7 +39,7 @@ def inspect(source=SOURCE, target=TARGET):
         if b.is_symlink():
             result[name] = 'symlink (manual investigation needed)'
         elif not b.is_file():
-            result[name] = 'missing'
+            result[name] = 'optional (not configured)' if name in OPTIONAL else 'missing'
         elif hashlib.sha256(a.read_bytes()).digest() == hashlib.sha256(b.read_bytes()).digest():
             result[name] = 'ok'
         else:
@@ -52,7 +53,7 @@ def apply(items, source=SOURCE, target=TARGET, backups=BACKUPS):
     # No deletion or replacement of deliberately linked units, or modifications to drop-ins.
     if any(value.startswith('symlink') for value in items.values()):
         raise RuntimeError('One or more service files are symlinks. Inspect those manually; nothing changed.')
-    changed = [name for name, state in items.items() if state != 'ok']
+    changed = [name for name, state in items.items() if state in ('missing','modified')]
     if not changed:
         return 'All Moon Cheese unit templates already match; no repair needed.'
     folder = backups / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + f'-{os.getpid()}')

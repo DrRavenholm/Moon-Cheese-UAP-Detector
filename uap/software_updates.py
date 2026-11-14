@@ -241,6 +241,30 @@ def latest_info(force=False):
     return dict(info,worker=_read(STATUS),installed=VERSION,channel='private-prerelease' if _test_token() else 'stable')
 
 
+def enqueue_service_repair(admin):
+    """Queue opt-in owned-unit restore using the existing root-owned worker path."""
+    from service_repair import inspect
+    current=inspect()
+    if any(x.startswith('symlink') for x in current.values()):
+        raise ValueError('A service definition is a symbolic link; investigate manually before repairing.')
+    if not any(x in ('missing','modified') for x in current.values()):
+        raise ValueError('All installed Moon Cheese service definitions match; no repair is needed.')
+    from datetime import timedelta
+    last=_read(STATUS)
+    try: age=datetime.now(timezone.utc)-datetime.fromisoformat(last['updated_utc'])
+    except (KeyError,TypeError,ValueError): age=timedelta(days=1)
+    REQUESTS.mkdir(mode=0o750,parents=True,exist_ok=True)
+    if any(REQUESTS.glob('*.json')) or (last.get('state') in ('queued','working') and age<timedelta(minutes=60)):
+        raise ValueError('Another software maintenance operation is already queued.')
+    jobid=secrets.token_hex(16)
+    _write(STATUS,{'state':'queued','action':'services','version':VERSION,
+                   'message':'Inspecting and restoring Moon Cheese-owned systemd definitions only.',
+                   'updated_utc':datetime.now(timezone.utc).isoformat(timespec='seconds'),'id':jobid})
+    _write(REQUESTS/(jobid+'.json'),{'action':'services','version':VERSION,
+                                    'admin':str(admin)[:64],'id':jobid})
+    return jobid
+
+
 def enqueue(action, admin):
     if action not in ('update','repair'):raise ValueError('Unknown software operation.')
     if action=='update':

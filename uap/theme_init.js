@@ -1,0 +1,2 @@
+/* Apply the remembered visitor palette before the page stylesheet is parsed. */
+(()=>{'use strict';try{const v=localStorage.getItem('moon-cheese-colour-theme');if(['red','green','yellow'].includes(v)){document.documentElement.dataset.moonTheme=v;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=({red:'#28111c',green:'#102d23',yellow:'#2e291a'})[v];}}catch(_){/* Private browsing or storage disabled: use blue. */}})();

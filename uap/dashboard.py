@@ -96,6 +96,7 @@ BASE = '''<!doctype html><html lang="en"><head><meta charset="utf-8">
 <link rel="manifest" href="{{url_for('moon_manifest')}}">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Moon Cheese">
 <meta name="theme-color" content="#0c1929">
+<script src="{{ url_for('theme_init_js') }}"></script>
 <style>
 :root{color-scheme:dark;--bg:#080d19;--panel:#141f31;--edge:#25354b;--text:#e6edf6;--muted:#99abc2;--cyan:#75dbed;--red:#ff829a}
 *{box-sizing:border-box}body{font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:radial-gradient(circle at 85% 0%,#1a3146,#080d19 50%);color:var(--text);min-height:100vh}
@@ -249,29 +250,62 @@ input,select,textarea{background:var(--theme-field);border-color:var(--edge);col
 .nav-dropdown a:hover,.mobile-panel a:hover,.nav-dropdown a:focus-visible,.mobile-panel a:focus-visible{background:var(--theme-hover)}
 .nav-menu[open]>summary{background:var(--theme-hover);border-color:var(--edge)}
 .notice{background:var(--theme-notice);border-color:var(--edge)}
-.theme-select{width:auto;min-width:118px;max-width:145px;padding:8px 9px;font-size:13px;line-height:1.2;color:var(--text);background:var(--theme-control);border:1px solid var(--edge)}
-.theme-control{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;white-space:nowrap;color:var(--muted)}
-@media(max-width:760px){.header-actions{gap:6px}.theme-control{font-size:0}.theme-select{min-width:92px;max-width:108px;padding:8px 4px;font-size:12px}.header-top .logo{font-size:16px}}
+@media(max-width:760px){.header-actions{gap:6px}.header-top .logo{font-size:16px}}
+
+/* Theme palette consistency: do not recolour actual camera/video imagery or semantic warnings. */
+.investigator-compare-controls,.camera-settings-preview,.help-doc-sidebar,.public-clip,
+.public-clip .public-notes,.storage-selection-bar,.storage-modal,.about-link-groups>div,
+.about-symbol:not([class*="about-symbol-"]){background:var(--theme-dropdown)}
+.calendar-cell,.stats span,.job-thumbnail{background:var(--theme-control)}
+.calendar-cell.selected,.storage-tab-active,.public-media-tabs .active{background:var(--theme-choice);border-color:var(--cyan)}
+.help-doc-links a:hover,.help-doc-links a:focus-visible{background:var(--theme-hover)}
+.about-link{color:var(--cyan)}.about-link:hover>span:last-child,.about-link:focus-visible>span:last-child{color:var(--text)}
+.about-hero-text{border-color:var(--edge)}.about-support{border-color:var(--edge)}
+.about-hero-art img{border-color:var(--cyan);box-shadow:0 0 18px var(--edge)}
+.live-mark{background:var(--theme-dropdown);border-color:var(--edge)}
+.investigator-stage .compare-label{background:var(--theme-dropdown);border-color:var(--edge)}
+.investigator-stage .compare-divider:after{background:var(--theme-control)}
+/* Public theme menu: compact current-colour marker, accessible options on demand. */
+.theme-menu{position:relative}
+.theme-menu>summary{display:flex;align-items:center;justify-content:center;min-width:38px;min-height:38px;padding:6px 8px!important;background:var(--theme-control);border:1px solid var(--edge);border-radius:7px;cursor:pointer}
+.theme-menu>summary:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.theme-menu .nav-dropdown{left:auto;right:0;min-width:208px;max-width:calc(100vw - 30px)}
+.theme-menu .nav-dropdown>strong{padding:6px 10px;color:var(--text)}
+.theme-swatch{width:17px;height:17px;border-radius:50%;display:inline-block;flex:0 0 17px;border:1px solid rgba(255,255,255,.32);background:var(--cyan)}
+.theme-swatch-blue{background:#75dbed}.theme-swatch-red{background:#ff7789}.theme-swatch-green{background:#79e3aa}.theme-swatch-yellow{background:#f6d36b}
+.theme-menu .theme-current{background:var(--cyan)}
+.theme-choice{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;text-align:left;font-size:14px;color:var(--text);background:transparent;border:1px solid transparent;border-radius:6px}
+.theme-choice:hover,.theme-choice:focus-visible{background:var(--theme-hover)}
+.theme-choice[aria-pressed="true"]{border-color:var(--cyan);background:var(--theme-control)}
+.theme-choice .theme-check{margin-left:auto;font-weight:700;color:var(--cyan)}
+/* Exposure countdown is a visual status, not a shutter control. */
+.photo-progress{border:1px solid var(--edge);border-radius:9px;padding:12px;margin:10px 0;background:var(--theme-dropdown)}
+.photo-progress[hidden]{display:none!important}.photo-progress .between{font-size:14px}.photo-progress strong{font-variant-numeric:tabular-nums;font-size:20px}
+.photo-progress progress{width:100%;height:12px;accent-color:var(--cyan);margin:9px 0 2px}
 </style></head><body><main class="shell"><header class="site-header">
   <div class="header-top">
     <div><div class="logo"><img src="{{url_for('moon_icon',name='moon-cheese-48.png')}}" width="26" height="26" style="vertical-align:middle;border-radius:6px;margin-right:7px" alt="">MOON CHEESE <span style="color:var(--cyan)">/ {{ site_title }}</span></div><div class="sub">Sky monitoring · Observation system</div></div>
     <div class="header-actions">
-    <label class="theme-control" for="moon-theme-selector">Theme
-      <select id="moon-theme-selector" class="theme-select" aria-label="Colour theme">
-        <option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Cheese Yellow</option>
-      </select>
-    </label>
+    <details class="nav-menu theme-menu" data-nav-menu>
+      <summary class="button" aria-label="Select colour theme" title="Colour theme"><span class="theme-swatch theme-current" id="moon-theme-current" aria-hidden="true"></span></summary>
+      <div class="nav-dropdown" role="group" aria-label="Select theme"><strong>Select theme</strong>
+        <button type="button" class="theme-choice" data-theme-choice="blue" aria-pressed="false"><span class="theme-swatch theme-swatch-blue" aria-hidden="true"></span>Blue<span class="theme-check" aria-hidden="true"></span></button>
+        <button type="button" class="theme-choice" data-theme-choice="red" aria-pressed="false"><span class="theme-swatch theme-swatch-red" aria-hidden="true"></span>Red<span class="theme-check" aria-hidden="true"></span></button>
+        <button type="button" class="theme-choice" data-theme-choice="green" aria-pressed="false"><span class="theme-swatch theme-swatch-green" aria-hidden="true"></span>Green<span class="theme-check" aria-hidden="true"></span></button>
+        <button type="button" class="theme-choice" data-theme-choice="yellow" aria-pressed="false"><span class="theme-swatch theme-swatch-yellow" aria-hidden="true"></span>Cheese Yellow<span class="theme-check" aria-hidden="true"></span></button>
+      </div>
+    </details>
     {% if public_view and not user %}<a class="button" href="{{ url_for('login') }}">Log in</a>{% endif %}
     {% if user %}
       <a class="button nav-bell" href="{{ url_for('notices_page') }}" aria-label="Notifications: {{ unread_notices }} unread" title="Notifications"><span aria-hidden="true">🔔</span>{% if unread_notices %} <span class="nav-count">{{ unread_notices }}</span>{% endif %}</a>
       <details class="nav-menu nav-account" data-nav-menu><summary class="button nav-link">Account ▾</summary><div class="nav-dropdown"><a href="{{ url_for('account') }}">My account</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
-      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Live Camera</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a>{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
+      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a>{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
     {% endif %}
     </div>
   </div>
   {% if user %}<nav class="site-nav" aria-label="Main navigation">
     <a class="button nav-link nav-dashboard" href="{{ url_for('home') }}">▦ Dashboard</a>
-    <details class="nav-menu" data-nav-menu><summary class="button nav-link">◉ Observations ▾</summary><div class="nav-dropdown">{% if admin %}<a href="{{ url_for('live_camera') }}">Live Camera</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a>{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}</div></details>
+    <details class="nav-menu" data-nav-menu><summary class="button nav-link">◉ Observations ▾</summary><div class="nav-dropdown">{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a>{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}</div></details>
     {% if admin %}<details class="nav-menu" data-nav-menu><summary class="button nav-link">⚙ Administration ▾</summary><div class="nav-dropdown"><a href="{{ url_for('settings') }}">Camera &amp; Detector Settings</a><a href="{{ url_for('users') }}">Users &amp; Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a></div></details>{% endif %}
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">▤ Information ▾</summary><div class="nav-dropdown"><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a></div></details>
   </nav>{% endif %}
@@ -341,7 +375,7 @@ def effective_site_title(config=None):
 
 HELP_CHAPTER_BY_ENDPOINT = {
     'home':'Dashboard', 'event':'Recorded events', 'delete_event':'Recorded events',
-    'settings':'Camera settings', 'live_camera':'Live Camera', 'calendar_page':'Observation calendar',
+    'settings':'Camera settings', 'live_camera':'Photography', 'calendar_page':'Observation calendar',
     'photo_gallery':'Photograph Gallery', 'photo_detail':'Photograph Gallery',
     'notices_page':'Notifications and reports', 'system_page':'System health and troubleshooting',
     'storage_page':'Storage Management', 'job_storage':'Storage Management', 'system_admin':'System Administration',
@@ -518,7 +552,7 @@ def home():
     <div style="flex:1;min-width:140px"><label for="event-status">Review status</label><select id="event-status" name="status"><option value="all">All statuses</option>{% for item in statuses %}<option value="{{ item }}" {% if selected==item %}selected{% endif %}>{{ item|title }}</option>{% endfor %}</select></div>
     <div style="flex:1;min-width:140px"><label for="sharing-filter">Public sharing</label><select name="sharing" id="sharing-filter"><option value="all" {% if sharing == 'all' %}selected{% endif %}>All recordings</option><option value="public" {% if sharing == 'public' %}selected{% endif %}>Public only</option><option value="private" {% if sharing == 'private' %}selected{% endif %}>Private only</option></select></div>
     <label class="checkline" style="align-self:end"><input type="checkbox" name="pinned" value="1" {% if pinned_only %}checked{% endif %}> Pinned only</label><button type="submit" style="align-self:end">Search / filter</button><a class="button" style="align-self:end" href="{{ url_for('home') }}">Clear</a></form></div>
-    {% if camera_job %}<section class="panel"><h2>Camera activity — {{'Time-lapse' if camera_job.kind=='timelapse' else 'Scheduled Video'}}</h2><p><a href="{{url_for('job_detail',job_id=camera_job.id)}}"><strong>{{camera_job.title}}</strong></a> · {{camera_job.phase}}</p><p class="note">Normal detection and the dedicated Live Camera are suspended during this session.</p>{% if camera_job.planned_frames %}<progress style="width:100%" max="{{camera_job.planned_frames}}" value="{{camera_job.completed_frames}}"></progress><p class="note">{{camera_job.completed_frames}} / {{camera_job.planned_frames}} source frames</p>{% endif %}</section>{% endif %}
+    {% if camera_job %}<section class="panel"><h2>Camera activity — {{'Time-lapse' if camera_job.kind=='timelapse' else 'Scheduled Video'}}</h2><p><a href="{{url_for('job_detail',job_id=camera_job.id)}}"><strong>{{camera_job.title}}</strong></a> · {{camera_job.phase}}</p><p class="note">Normal detection and dedicated photography is suspended during this session.</p>{% if camera_job.planned_frames %}<progress style="width:100%" max="{{camera_job.planned_frames}}" value="{{camera_job.completed_frames}}"></progress><p class="note">{{camera_job.completed_frames}} / {{camera_job.planned_frames}} source frames</p>{% endif %}</section>{% endif %}
     <div class="panel"><div class="between"><h2>Saved detections</h2><span class="note">{{ total }} matching event{{ '' if total==1 else 's' }}{% if total %} · page {{ page }} of {{ page_count }}{% endif %}</span></div>
     {% if events %}<table><thead><tr><th>Event</th><th>Time (local)</th><th>Status</th><th>Preview</th></tr></thead><tbody>
     {% for e in events %}<tr><td><a href="{{ url_for('event', event_id=e.id) }}">{{ e.kind }}</a>{% if e.pinned %} <span class="pin" title="Protected from automatic cleanup">★ Pinned</span>{% endif %}{% if e.public %} <span class="pill" title="Approved for the public camera page">Public</span>{% endif %}<div class="note">Event #{{ e.id }}{% if e.trigger_source %} · {{ source_labels.get(e.trigger_source, 'Detector') }}{% endif %}</div>{% if e.demo %}<div class="note">DEMO · no camera footage</div>{% endif %}</td>
@@ -756,17 +790,17 @@ def delete_event(event_id):
 def live_camera():
     camera_job = oj.active()
     if camera_job:
-        return render_page('''<h1>Live Camera temporarily unavailable</h1>
+        return render_page('''<h1>Photography temporarily unavailable</h1>
         <section class="panel"><p>The camera is being used for <strong>{{job.title}}</strong>.</p>
         <p>{{job.phase}} · Motion detection suspended</p>
         <a class="button" href="{{url_for('job_detail',job_id=job.id)}}">View observation progress</a></section>''',
-        title='Live Camera busy',job=camera_job)
+        title='Photography busy',job=camera_job)
     """Admin only: the same cached detector image, not a second live stream."""
-    return render_page('''<h1>Live Camera</h1><p class="note">Camera still updates approximately every ten seconds. Image adjustments run in your browser and do not change detection settings.</p>
+    return render_page('''<h1>Photography</h1><p class="note">Camera preview snapshots update approximately every ten seconds. Image adjustments run in your browser and do not change detection settings.</p>
     <section class="panel" id="live-root" data-csrf="{{ csrf }}"><div class="between"><h2>Camera snapshot</h2><div class="row"><button id="live-freeze" type="button">Freeze</button><button id="live-refresh" type="button">Refresh now</button></div></div>
     <div class="live-surface" id="live-stage"><canvas id="live-canvas" width="1280" height="720" aria-label="Camera snapshot"></canvas><span class="live-mark left" id="live-left-label" hidden>Original</span><span class="live-mark right" id="live-right-label" hidden>Low-light enhanced</span></div>
     <p class="note" id="live-status" role="status">Loading latest snapshot…</p>
-    <p class="note" id="live-source-info" role="status">The Live Camera uses the detector's current video resolution. The Dashboard and public preview remain lightweight.</p>
+    <p class="note" id="live-source-info" role="status">The Photography preview uses the detector's current video resolution. The Dashboard and public preview remain lightweight.</p>
     <div class="live-controls"><label>View <select id="live-view"><option value="original">Original</option><option value="detection">Detection (grayscale)</option><option value="lowlight">Low-light enhanced</option></select></label>
     <button type="button" id="live-compare">Compare frame</button><label>Left <select id="live-left"><option value="original">Original</option><option value="detection">Detection (grayscale)</option><option value="lowlight">Low-light enhanced</option></select></label><label>Right <select id="live-right"><option value="lowlight">Low-light enhanced</option><option value="original">Original</option><option value="detection">Detection (grayscale)</option></select></label></div>
     <div class="live-controls" id="live-split-row" hidden><label style="flex:1">Reveal <input id="live-split" type="range" min="0" max="100" value="50" style="flex:1;width:100%"></label><span id="live-split-value">50%</span></div>
@@ -789,10 +823,12 @@ def live_camera():
       </div>
     </details>
     <div class="live-controls"><label>Photo format<select id="photo-format"><option value="jpg">JPEG (high quality)</option><option value="png">PNG (larger lossless file)</option></select></label><button id="photo-capture" type="button">Capture full resolution</button></div>
-    <p id="photo-status" class="note" role="status">Camera remains in normal recording mode until Capture is pressed.</p><div id="photo-download"></div>
+    <p id="photo-status" class="note" role="status">Camera remains in normal recording mode until Capture is pressed.</p>
+    <div id="photo-progress" class="photo-progress" hidden aria-label="Photograph exposure progress"><div class="between"><span id="photo-phase">Exposure in progress</span><strong id="photo-countdown" role="timer">—</strong></div><progress id="photo-exposure-progress" max="100" value="0"></progress><p class="note tight">Approximate shutter countdown; camera timing and saving can take longer.</p></div>
+    <div id="photo-download"></div>
     <p class="note">After capture, select <strong>Review captured photo</strong> to apply Original, Detection, Low-light enhanced or comparison processing to the saved photograph. Save current view PNG exports a processed Full HD copy, while Download original photo keeps its full sensor resolution.</p>
     </section>
-    <script src="{{ url_for('live_js') }}" defer></script>''', title='Live Camera')
+    <script src="{{ url_for('live_js') }}" defer></script>''', title='Photography')
 
 
 @app.route('/live-camera/capture', methods=['POST'])
@@ -840,6 +876,13 @@ def photo_status(token):
                 photo_set_state(token, 'error', value['message'])
         except (OSError, ValueError, KeyError, TypeError):
             pass
+    if value.get('state')=='exposing':
+        try:
+            duration=float(value['exposure_seconds'])
+            start=float(value['exposure_started_epoch'])
+            value['remaining_seconds']=max(0.0,duration-(time.time()-start))
+        except (TypeError,ValueError,KeyError):
+            value.pop('remaining_seconds',None)
     return jsonify(value)
 
 
@@ -855,6 +898,11 @@ def photo_download(token):
     details=next((item for item in photos() if item['token']==token),None)
     return send_file(path,as_attachment=True,
                      download_name=photo_filename(token[:8],details['title'] if details else 'Camera-capture',fmt))
+
+
+@app.route('/assets/theme-init.js')
+def theme_init_js():
+    return send_file(Path(__file__).with_name('theme_init.js'),mimetype='application/javascript')
 
 
 @app.route('/assets/theme.js')
@@ -2429,6 +2477,16 @@ def system_page():
     from job_diagnostics import recent_jobs
     job_health=recent_jobs()
     software_info=software_latest_info()
+    try:
+        from service_repair import inspect as inspect_service_units
+        service_units=inspect_service_units()
+        service_drift={k:v for k,v in service_units.items() if v in ('missing','modified')}
+        service_warning=any(v.startswith('symlink') for v in service_units.values())
+        service_error=''
+    except (OSError,RuntimeError,ValueError) as exc:
+        service_drift={}
+        service_warning=True
+        service_error='Moon Cheese service definitions could not be inspected. Run service_repair.py --check from PuTTY.'
     return render_page('''<h1>System health</h1><p class="muted">Device diagnostics and administrator maintenance. Health readings refresh when you reload this page.</p>
     {% if health.disk_warning %}<div class="notice" role="alert"><strong>Low free disk space.</strong> Review recordings and storage settings before the SD card fills up.</div>{% endif %}
     <div class="grid"><div class="panel"><div class="sub">Detector heartbeat</div><div class="value">{{ health.detector.state|title }}</div><p class="note">{{ health.detector.message }}</p><p class="note">Last update: {{ health.detector.age_seconds if health.detector.age_seconds is not none else 'Unavailable' }} seconds ago</p></div>
@@ -2451,15 +2509,22 @@ def system_page():
       {% if software_error %}<p class="error" id="software-auth-error" role="alert">{{software_error}}</p>{% endif %}
       <form method="post" action="{{url_for('software_action')}}" id="software-update-form" autocomplete="off">
         <input type="hidden" name="csrf" value="{{csrf}}">
-        <label class="software-password">Confirm your administrator password for Update or Repair
+        <label class="software-password">Confirm your administrator password for Update, Repair or Service repair
           <input id="software-admin-password" type="password" name="password" autocomplete="off" placeholder="Current administrator password">
         </label>
         <div class="row" style="gap:8px">
           <button name="action" value="check" type="submit">Check for updates</button>
           <button name="action" value="update" type="submit" {% if not (software.available and software.has_assets) %}disabled title="No installable newer release in the selected channel"{% endif %}>Update now</button>
           <button name="action" value="repair" type="submit" {% if not software.repair_ready %}disabled title="Current version has no verified GitHub release"{% endif %}>Repair current version</button>
+          <button name="action" value="services" type="submit" {% if not service_drift or service_warning %}disabled{% endif %} title="Back up and restore modified or missing Moon Cheese-owned service files; no service restarts">Repair services</button>
         </div>
       </form>
+      <details class="service-inspection"><summary>Service definitions: {% if service_error %}inspection unavailable{% elif service_warning %}manual inspection required{% elif service_drift %}{{service_drift|length}} difference(s) detected{% else %}matching official files{% endif %}</summary>
+        {% if service_error %}<p class="note">{{service_error}}</p>{% endif %}
+        <p class="note">Repair services requires your administrator password. It restores only missing or changed Moon Cheese systemd unit files, backs them up first, reloads systemd, and never restarts a running camera or another application. Optional unused Cloudflare units are not treated as faults.</p>
+        {% if service_drift %}<ul>{% for name, state in service_drift.items() %}<li><code>{{name}}</code> — {{state}}</li>{% endfor %}</ul>{% endif %}
+        {% if service_warning %}<p class="note">Symbolic links or unavailable service templates must be checked manually before repair.</p>{% endif %}
+      </details>
       <p class="note">Updates and repair use the complete versioned release installer, preserving configuration, user accounts, recordings and credentials. Camera recordings must finish first. The normal channel offers stable releases. Private prerelease testing can be temporarily enabled by an administrator on the device; no automatic installation occurs.</p>
       <p class="note"><a href="https://github.com/DrRavenholm/Moon-Cheese-UAP-Detector/releases" rel="noopener noreferrer" target="_blank">View official release notes on GitHub</a></p>
       <script src="{{url_for('software_update_js')}}" defer></script>
@@ -2470,8 +2535,10 @@ def system_page():
     <label class="checkline"><input type="checkbox" name="acknowledge" value="YES" required> I understand that this stops recording and may disconnect the web interface.</label>
     <div class="row"><button name="action" value="reboot" type="submit">Reboot Pi</button>
     <button class="danger" name="action" value="shutdown" type="submit">Shutdown Pi</button></div></form></section>''', title='System health', health=h,storms=storm_recent(),job_health=job_health, app_version=APP_VERSION,software=software_info,
-                       software_error={'missing':'Enter your current administrator password to update or repair Moon Cheese.',
-                                       'incorrect':'Incorrect administrator password. No update or repair was started.'}.get(request.args.get('software_error', ''), ''))
+                       service_drift=service_drift, service_warning=service_warning, service_error=service_error,
+                       software_error={'missing':'Enter your current administrator password for the requested maintenance action.',
+                                       'incorrect':'Incorrect administrator password. No maintenance action was started.',
+                                       'services':'Service repair is unavailable or not needed; check the service definitions below.'}.get(request.args.get('software_error', ''), ''))
 
 
 @app.route('/system/software/action',methods=['POST'])
@@ -2481,15 +2548,19 @@ def software_action():
     action=request.form.get('action','')
     if action=='check':
         software_latest_info(force=True)
-    elif action in ('update','repair'):
+    elif action in ('update','repair','services'):
         password=request.form.get('password','')
         if not password:
             return redirect(url_for('system_page',software_error='missing')+'#software-updates',code=303)
         if not verify_current_admin_password(password):
             return redirect(url_for('system_page',software_error='incorrect')+'#software-updates',code=303)
         try:
-            software_enqueue(action,current_user()['username'])
-        except ValueError as exc:
+            if action=='services':
+                from software_updates import enqueue_service_repair
+                enqueue_service_repair(current_user()['username'])
+            else:
+                software_enqueue(action,current_user()['username'])
+        except (ValueError, OSError, RuntimeError) as exc:
             from software_updates import CHECK, _write, latest_info
             # Use the same inline status area; do not expose worker traces.
             # Do not overwrite a valid cached latest version when reporting errors.

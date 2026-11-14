@@ -195,16 +195,26 @@ def process():
     state={'action':action,'version':version,'id':data.get('id',''),
            'updated_utc':__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(timespec='seconds')}
     try:
-        if action not in ('update','repair') or not isinstance(version,str):
-            raise ValueError('Unexpected software update request.')
-        _write(STATUS,dict(state,state='working',message='Downloading and verifying the official GitHub release.'))
-        message=perform(action,version)
+        if action=='services':
+            if version!=VERSION:
+                raise ValueError('Service repair request does not match the installed version.')
+            from service_repair import inspect as inspect_services, apply as restore_services
+            _write(STATUS,dict(state,state='working',message='Inspecting official Moon Cheese service definitions.'))
+            current=inspect_services()
+            message=restore_services(current)
+            # Do not include local backup paths in normal dashboard results.
+            message='Moon Cheese service definitions checked and restored where needed. Backups retained; running services were not restarted.'
+        else:
+            if action not in ('update','repair') or not isinstance(version,str):
+                raise ValueError('Unexpected software maintenance request.')
+            _write(STATUS,dict(state,state='working',message='Downloading and verifying the official GitHub release.'))
+            message=perform(action,version)
         _write(STATUS,dict(state,state='ok',message=message))
         print('Moon Cheese software operation successful:',action,version,flush=True)
         return 0
     except Exception as exc:
         # Never send raw HTTP responses, tokens, file paths or untrusted output to the UI.
-        message=str(exc) if isinstance(exc,ValueError) else f'{type(exc).__name__} during software installation; inspect privileged worker logs.'
+        message=str(exc) if isinstance(exc,ValueError) else ('Service definitions could not be restored; inspect the maintenance service logs.' if action=='services' else f'{type(exc).__name__} during software installation; inspect privileged worker logs.')
         _write(STATUS,dict(state,state='error',message=message[:350]))
         print('Moon Cheese software operation failed:',action,type(exc).__name__,str(exc)[:350],file=sys.stderr)
         return 1

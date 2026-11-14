@@ -174,13 +174,46 @@
   const fields={mode:'photo-mode',format:'photo-format',exposure_ms:'photo-exposure',gain:'photo-gain',
     focus:'photo-focus',awb:'photo-awb',red_gain:'photo-red',blue_gain:'photo-blue',
     brightness:'photo-brightness',contrast:'photo-contrast',saturation:'photo-saturation'};
+  const exposurePanel=$('photo-progress'),exposureClock=$('photo-countdown'),exposureBar=$('photo-exposure-progress'),exposurePhase=$('photo-phase');
+  let exposureTicker=null,exposureState=null;
+  function stopExposureTimer(){
+    if(exposureTicker)clearInterval(exposureTicker);
+    exposureTicker=null;exposureState=null;
+    exposurePanel.hidden=true;
+  }
+  function renderExposure(){
+    if(!exposureState)return;
+    const elapsed=(performance.now()-exposureState.syncedAt)/1000;
+    const left=Math.max(0,exposureState.remaining-elapsed);
+    exposureClock.textContent=left>0?`${Math.ceil(left)} s`:'Finishing…';
+    exposureBar.value=Math.max(0,Math.min(100,(1-left/exposureState.total)*100));
+    if(left===0)exposurePhase.textContent='Completing exposure…';
+  }
+  function updateExposure(info){
+    if(info.state==='exposing'&&Number(info.exposure_seconds)>0&&Number.isFinite(Number(info.remaining_seconds))){
+      const total=Number(info.exposure_seconds);
+      exposureState={total,remaining:Math.max(0,Number(info.remaining_seconds)),syncedAt:performance.now()};
+      exposurePanel.hidden=false;exposurePhase.textContent='Manual exposure in progress';
+      exposureBar.max=100;renderExposure();
+      if(!exposureTicker)exposureTicker=setInterval(renderExposure,200);
+    }else if(info.state==='preparing' || info.state==='queued'){
+      exposurePanel.hidden=false;exposurePhase.textContent='Preparing photography camera…';
+      exposureClock.textContent='—';exposureBar.removeAttribute('value');
+      if(exposureTicker)clearInterval(exposureTicker);exposureTicker=null;exposureState=null;
+    }else if(info.state==='saving'){
+      exposurePanel.hidden=false;exposurePhase.textContent='Saving photograph…';exposureClock.textContent='—';
+      exposureBar.removeAttribute('value');
+      if(exposureTicker)clearInterval(exposureTicker);exposureTicker=null;exposureState=null;
+    }else stopExposureTimer();
+  }
   $('photo-capture').addEventListener('click',async()=>{
     const btn=$('photo-capture');btn.disabled=true;
-    $('photo-download').replaceChildren();
+    $('photo-download').replaceChildren();stopExposureTimer();
     const data=new FormData();data.set('csrf',root.dataset.csrf);
     const advanced=$('live-advanced').open;
     for(const [key,id] of Object.entries(fields)) data.set(key,$(id).value);
     if (!advanced) {data.set('mode','auto');data.set('focus','infinity');data.set('awb','auto');}
+    const manualPhoto=data.get('mode')==='manual';
     try {
       const res=await fetch('/live-camera/capture',{method:'POST',body:data,credentials:'same-origin'});
       const contentType=res.headers.get('content-type')||'';
@@ -189,14 +222,16 @@
       if (!result || !result.token) throw new Error('Camera did not return a capture reference. Please retry.');
       const token=result.token;const started=Date.now();
       $('photo-status').textContent='Waiting for camera, then capturing photograph…';
+      if(manualPhoto)updateExposure({state:'queued'});
       if(photoPolling) clearInterval(photoPolling);
       photoPolling=setInterval(async()=>{
         try {
           const resp=await fetch(`/live-camera/photo/${token}/status`,{cache:'no-store'});
           if(!resp.ok) throw new Error('Photo status unavailable');
           const info=await resp.json();$('photo-status').textContent=info.message||info.state;
+          if(manualPhoto)updateExposure(info);
           if(info.state==='done') {
-            clearInterval(photoPolling);photoPolling=null;btn.disabled=false;
+            clearInterval(photoPolling);photoPolling=null;btn.disabled=false;stopExposureTimer();
             const a=document.createElement('a');a.className='button';a.textContent=`Download ${info.width} × ${info.height} ${info.format.toUpperCase()} photo`;
             a.href=`/live-camera/photo/${token}/download`;
             const review=document.createElement('button');review.type='button';review.textContent='Review captured photo';
@@ -213,11 +248,12 @@
             $('photo-download').replaceChildren(a,document.createTextNode(' '),review);
           } else if(info.state==='error' || Date.now()-started>240000) {
             clearInterval(photoPolling);photoPolling=null;btn.disabled=false;
+            stopExposureTimer();
             if(info.state!=='error') $('photo-status').textContent='Capture timed out. Check System Health and camera service before retrying.';
           }
-        } catch(e) {clearInterval(photoPolling);photoPolling=null;btn.disabled=false;$('photo-status').textContent=e.message;}
+        } catch(e) {clearInterval(photoPolling);photoPolling=null;btn.disabled=false;stopExposureTimer();$('photo-status').textContent=e.message;}
       },1500);
-    } catch(e) {$('photo-status').textContent=e.message;btn.disabled=false;}
+    } catch(e) {stopExposureTimer();$('photo-status').textContent=e.message;btn.disabled=false;}
   });
   setInterval(()=>refresh(),10000);
   refresh();

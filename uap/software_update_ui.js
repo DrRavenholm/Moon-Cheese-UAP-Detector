@@ -11,7 +11,7 @@
      if(!response.ok)return;
      const info=await response.json();
      if(!['queued','working','ok','error'].includes(info.state))return;
-     const text=`${info.action==='repair'?'Repair':'Update'} — ${info.state}: ${info.message||'No details available.'}`;
+     const text=`${info.action==='services'?'Service repair':info.action==='repair'?'Repair':'Update'} — ${info.state}: ${info.message||'No details available.'}`;
      node.hidden=false;node.textContent=text;
    }catch(_){/* Dashboard can restart temporarily during an update. */}
  }
