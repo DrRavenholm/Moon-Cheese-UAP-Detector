@@ -226,6 +226,18 @@ def latest_info(force=False):
             info={'checked_utc':datetime.now(timezone.utc).isoformat(timespec='seconds'),
                   'latest':None,'available':False,'has_assets':False,'repair_ready':False,'message':str(exc), 'channel':'private-prerelease' if _test_token() else 'stable'}
         _write(CHECK,info)
+    # A previously cached check may refer to an older installed version. Recompute
+    # availability from the actual code version instead of trusting the cache.
+    info=dict(info)
+    if info.get('latest'):
+        try:
+            newer=version_newer(info['latest'],VERSION)
+            info['available']=newer
+            if not newer:
+                info['message']='The installed version is up to date.'
+        except ValueError:
+            info['available']=False
+            info['message']='Stored release information is invalid. Select Check for updates.'
     return dict(info,worker=_read(STATUS),installed=VERSION,channel='private-prerelease' if _test_token() else 'stable')
 
 

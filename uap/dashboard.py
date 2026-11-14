@@ -229,10 +229,38 @@ a{color:var(--cyan)}.shell{max-width:1100px;margin:auto;padding:25px 18px}.bar{d
 .software-password{display:block;max-width:430px;margin-bottom:10px}
 .software-password input{max-width:420px;width:100%;display:block;margin-top:6px}
 
+/* Browser-local colour themes. No server-side user state is modified. */
+:root{--theme-grad:#1a3146;--theme-header:#102034;--theme-control:#162b40;--theme-choice:#25485b;--theme-hover:#316179;--theme-field:#091423;--theme-dropdown:#132438;--theme-notice:#172b3c;--theme-hair:#39566a}
+:root[data-moon-theme="red"]{--bg:#0c080c;--panel:#231219;--edge:#5c303a;--text:#ffe6e9;--muted:#d2a5ac;--cyan:#ff7789;--theme-grad:#431a25;--theme-header:#28111c;--theme-control:#381b26;--theme-choice:#673040;--theme-hover:#844052;--theme-field:#190b13;--theme-dropdown:#2d1520;--theme-notice:#3a202b;--theme-hair:#77404d}
+:root[data-moon-theme="green"]{--bg:#08120f;--panel:#13281f;--edge:#2a5744;--text:#e1f9eb;--muted:#a1cdb5;--cyan:#79e3aa;--theme-grad:#164b34;--theme-header:#102d23;--theme-control:#174032;--theme-choice:#286c4f;--theme-hover:#338665;--theme-field:#091f17;--theme-dropdown:#143729;--theme-notice:#1a4231;--theme-hair:#3b7756}
+:root[data-moon-theme="yellow"]{--bg:#141007;--panel:#2a2416;--edge:#605032;--text:#fff3d2;--muted:#d4bd8b;--cyan:#f6d36b;--theme-grad:#51401d;--theme-header:#2e291a;--theme-control:#41351e;--theme-choice:#6c5427;--theme-hover:#896d32;--theme-field:#201a10;--theme-dropdown:#382e1c;--theme-notice:#473b25;--theme-hair:#836a3b}
+body{background:radial-gradient(circle at 85% 0%,var(--theme-grad),var(--bg) 50%)}
+.site-header{background:var(--theme-header);border-color:var(--edge)}
+.site-nav .nav-link,.header-actions .nav-bell,.header-actions .nav-account>summary{background:var(--theme-control);border-color:var(--edge)}
+.site-nav .nav-dashboard{background:var(--text);color:var(--bg);border-color:var(--text)}
+.site-nav .nav-dashboard:hover{background:var(--muted)}
+button,.button{background:var(--theme-choice);border-color:var(--edge);color:var(--text)}
+button:hover,.button:hover{background:var(--theme-hover)}
+/* Destructive and status actions keep their warning semantics in every visitor palette. */
+button.danger,.button.danger{background:#5a202f;border-color:#bf6473;color:#fff}
+button.danger:hover,.button.danger:hover{background:#762a3d}
+input,select,textarea{background:var(--theme-field);border-color:var(--edge);color:var(--text)}
+.nav-dropdown,.mobile-panel{background:var(--theme-dropdown);border-color:var(--theme-hair)}
+.nav-dropdown a:hover,.mobile-panel a:hover,.nav-dropdown a:focus-visible,.mobile-panel a:focus-visible{background:var(--theme-hover)}
+.nav-menu[open]>summary{background:var(--theme-hover);border-color:var(--edge)}
+.notice{background:var(--theme-notice);border-color:var(--edge)}
+.theme-select{width:auto;min-width:118px;max-width:145px;padding:8px 9px;font-size:13px;line-height:1.2;color:var(--text);background:var(--theme-control);border:1px solid var(--edge)}
+.theme-control{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;white-space:nowrap;color:var(--muted)}
+@media(max-width:760px){.header-actions{gap:6px}.theme-control{font-size:0}.theme-select{min-width:92px;max-width:108px;padding:8px 4px;font-size:12px}.header-top .logo{font-size:16px}}
 </style></head><body><main class="shell"><header class="site-header">
   <div class="header-top">
     <div><div class="logo"><img src="{{url_for('moon_icon',name='moon-cheese-48.png')}}" width="26" height="26" style="vertical-align:middle;border-radius:6px;margin-right:7px" alt="">MOON CHEESE <span style="color:var(--cyan)">/ {{ site_title }}</span></div><div class="sub">Sky monitoring · Observation system</div></div>
     <div class="header-actions">
+    <label class="theme-control" for="moon-theme-selector">Theme
+      <select id="moon-theme-selector" class="theme-select" aria-label="Colour theme">
+        <option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Cheese Yellow</option>
+      </select>
+    </label>
     {% if public_view and not user %}<a class="button" href="{{ url_for('login') }}">Log in</a>{% endif %}
     {% if user %}
       <a class="button nav-bell" href="{{ url_for('notices_page') }}" aria-label="Notifications: {{ unread_notices }} unread" title="Notifications"><span aria-hidden="true">🔔</span>{% if unread_notices %} <span class="nav-count">{{ unread_notices }}</span>{% endif %}</a>
@@ -248,6 +276,7 @@ a{color:var(--cyan)}.shell{max-width:1100px;margin:auto;padding:25px 18px}.bar{d
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">▤ Information ▾</summary><div class="nav-dropdown"><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a></div></details>
   </nav>{% endif %}
   </header>
+<script src="{{ url_for('theme_js') }}" defer></script>
 <script src="{{ url_for('navigation_js') }}" defer></script>
 {% if help_anchor and user %}<div class="context-help"><a class="button" href="{{ url_for('help_page') }}#chapter-{{ help_anchor }}" title="Open help for this page" aria-label="Help for {{ title }}">? Help</a></div>{% endif %}
 {{ content|safe }}<div class="foot">Moon Cheese UAP Detector by Dr Ravenholm · <a href="https://transparent-aluminium.net/" target="_blank" rel="noopener noreferrer">Transparent-Aluminium.net</a> · v{{app_version}} · A motion detection is not proof of an unidentified object.</div></main></body></html>'''
@@ -826,6 +855,11 @@ def photo_download(token):
     details=next((item for item in photos() if item['token']==token),None)
     return send_file(path,as_attachment=True,
                      download_name=photo_filename(token[:8],details['title'] if details else 'Camera-capture',fmt))
+
+
+@app.route('/assets/theme.js')
+def theme_js():
+    return send_file(Path(__file__).with_name('theme.js'),mimetype='application/javascript')
 
 
 @app.route('/assets/navigation.js')
@@ -1855,7 +1889,8 @@ def notices_page():
                         delivery.push_send(dict(sub),'Moon Cheese test notification','Browser Push is configured.')
                     return redirect(url_for('notices_page',test=1)+'#delivery')
                 except Exception as exc:
-                    error='Test delivery failed ('+type(exc).__name__+'). Check the provider or device settings.'
+                    error=(delivery.smtp_failure_message(exc,delivery.smtp_settings()) if request.form['action']=='test_email'
+                           else 'Browser push test failed. Check HTTPS, browser permission and device subscription.')
         elif request.form.get('action')=='read':
             try: nid=int(request.form.get('notice_id',''))
             except ValueError: abort(400)
@@ -2300,7 +2335,7 @@ def system_admin():
                 notice=f'Imported {len(document["settings"])} settings and added {count} new user accounts. Existing accounts and their passwords were preserved.'
             else:abort(400)
         except (ValueError,OSError) as exc:error=str(exc)
-        except (smtplib.SMTPException,TimeoutError,ConnectionError) as exc:error='SMTP test failed ('+type(exc).__name__+'). Verify credentials, security and network.'
+        except (smtplib.SMTPException,TimeoutError,ConnectionError,OSError) as exc:error=delivery.smtp_failure_message(exc,delivery.smtp_settings())
     smtp_config=delivery.smtp_settings()
     smtp_public={k:v for k,v in smtp_config.items() if k!='password'}
     smtp_public['has_password']=bool(smtp_config.get('password'))
@@ -2384,7 +2419,7 @@ def delivery_history():
     <div style="overflow-x:auto"><table><thead><tr><th>User</th><th>Notice</th><th>Method</th><th>State</th><th>Attempts</th><th>Updated</th><th>Action</th></tr></thead><tbody>
     {% for d in data.rows %}<tr><td>{{d.username}}</td><td>{{d.title}}{% if d.error %}<p class="note">{{d.error}}</p>{% endif %}</td><td>{{d.channel|title}}</td><td>{{d.state|title}}</td><td>{{d.attempts}}</td><td>{{d.changed_utc|localdt}}</td><td>{% if d.state=='failed' %}<form method="post" action="{{url_for('system_admin')}}"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="retry_delivery"><input type="hidden" name="delivery_id" value="{{d.id}}"><button type="submit">Retry</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="7">No matching delivery attempts.</td></tr>{% endfor %}</tbody></table></div>
     <div class="between" style="margin-top:12px">{% if data.page>1 %}<a class="button" href="{{url_for('delivery_history',page=data.page-1,channel=channel,state=state)}}">← Previous</a>{% endif %}
-    {% if data.page<data.pages %}<a class="button" href="{{url_for('delivery_history',page=data.page+1,channel=channel,state=state)}}">Next →</a>{% endif %}</div></section>''',title='Delivery history',data=data,channel=channel,state=state,csrf=csrf_token())
+    {% if data.page<data.pages %}<a class="button" href="{{url_for('delivery_history',page=data.page+1,channel=channel,state=state)}}">Next →</a>{% endif %}</div></section>''',title='Delivery history',data=data,channel=channel,state=state)
 
 
 @app.route('/system')

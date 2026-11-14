@@ -30,6 +30,21 @@ NETWORK_PANEL = '''<details class="panel setting-section" id="network-admin" {% 
 </div></details>
 <details class="panel setting-section" {% if focus_network in ('tunnel','tunnel_apply','tunnel_abandon','tunnel_cleanup','tunnel_disable','tunnel_remove') %}open{% endif %}><summary>Cloudflare Tunnel — no router forwarding or NPM required</summary><div class="setting-content">
 <p class="note">Enter a hostname, Cloudflare account and token, then select <strong>Set up or update</strong>. Moon Cheese finds a previous unfinished setup, repairs its DNS route where safe, installs cloudflared and checks the connection. No NPM or inbound router ports required.</p>
+<details class="setting-section"><summary>Cloudflare setup guide — find IDs and create the correct API token</summary><div class="setting-content">
+<p class="note"><strong>Before you begin:</strong> add your domain to your own Cloudflare account and ensure its DNS is managed by Cloudflare. You need an administrator login to Cloudflare. Do not borrow another person's API token.</p>
+<ol>
+<li>Sign in to <a href="https://dash.cloudflare.com/" target="_blank" rel="noopener noreferrer">Cloudflare Dashboard</a>. Select the account that owns the domain. Copy the <strong>Account ID</strong> from that account's overview/details.</li>
+<li>Open <strong>Websites</strong>, select your domain (the main domain, not the Moon Cheese subdomain), then find and copy the <strong>Zone ID</strong> under its Overview / API details.</li>
+<li>In Cloudflare, open your profile menu → <strong>My Profile → API Tokens → Create Token → Create Custom Token</strong> (the location may also be called Account API Tokens). Name it something like <em>Moon Cheese Tunnel</em>.</li>
+<li>In <strong>Permissions</strong>, add <strong>Account → Cloudflare Tunnel → Edit</strong> (some Cloudflare accounts show this as <strong>Cloudflare One Connectors Write</strong> / <strong>Cloudflare One Connector: cloudflared Write</strong>), then <strong>Zone → DNS → Edit</strong>, and <strong>Zone → Zone → Read</strong> (needed to verify that the hostname belongs to your domain). Do not choose a Global API Key.</li>
+<li>In <strong>Account Resources</strong> select only the account that owns your domain. In <strong>Zone Resources</strong> choose <strong>Include → Specific zone</strong>, then select your domain. Review the scope and create the token.</li>
+<li><strong>Copy the token immediately</strong> into the Moon Cheese API token field below. Cloudflare may only show it once. Keep it secret and do not paste it into chats or screenshots.</li>
+<li>Enter a hostname such as <strong>space.example.com</strong>, the Account ID and Zone ID, then confirm with your Moon Cheese administrator password and choose <strong>Set up or update Cloudflare Tunnel</strong>. The hostname must belong to the selected zone.</li>
+</ol>
+<p class="note">The API token is <strong>not</strong> the tunnel connector token. Moon Cheese creates and stores the connector credentials itself. No port forwarding, NPM or antenna is required. Cloudflare's menu labels change over time; use the listed permission names and scopes.</p>
+<p class="note"><strong>Error 1033:</strong> Cloudflare cannot find a healthy tunnel connector. Check <strong>Cloudflare → Networking → Tunnels</strong> for Healthy/Down and check the Moon Cheese Tunnel status. A stopped connector, lost outbound network access, or a DNS hostname pointing to another tunnel may cause it. Do not delete DNS records or tunnels belonging to other services.</p>
+</div></details>
+
 {% if managed_tunnel.managed %}<div class="notice"><strong>Previously configured Tunnel:</strong> {{managed_tunnel.hostname}} — {% if managed_tunnel.mode=='tunnel' %}selected for remote access{% else %}configuration saved (currently local mode){% endif %}</div>{% endif %}
 {% if managed_tunnel.unfinished %}<div class="notice"><strong>Unfinished Moon Cheese Tunnel:</strong> {{managed_tunnel.stage_hostname}}. You can retry it or enter a different hostname below. You do not need to delete the old Cloudflare resources manually.</div>{% endif %}
 <form method="post" action="{{url_for('network_action')}}"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="tunnel_apply">

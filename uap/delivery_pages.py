@@ -30,7 +30,7 @@ ADMIN_DELIVERY = '''<details class="panel setting-section" id="outgoing-email"><
 <div><label>SMTP username<input name="smtp_username" required maxlength="254" value="{{smtp.username or ''}}"></label></div>
 <div><label>SMTP app password / credential<input type="password" name="smtp_secret" autocomplete="new-password" placeholder="{{'Leave blank to retain saved credential' if smtp.has_password else 'Enter your SMTP credential'}}"></label></div></div>
 <label class="checkline"><input type="checkbox" name="smtp_enabled" value="1" {% if smtp.enabled %}checked{% endif %}> Enable outgoing email</label>
-<p class="note">The secret is stored separately from configuration exports and will never be displayed again. Saving replaces SMTP configuration; leaving an existing password blank preserves it. Tests send an email to the configured sender address.</p>
+<p class="note">The secret is stored separately from configuration exports and will never be displayed again. Saving replaces SMTP configuration; leaving an existing password blank preserves it. Tests send an email to the configured sender address. For Gmail, use smtp.gmail.com, port 587 with STARTTLS (or 465 with SSL/TLS), the full Gmail address as username, and an app password belonging to that same account. Error messages distinguish connection, TLS and login problems without revealing credentials.</p>
 <button type="submit">Save SMTP configuration</button></form>
 {% if smtp.has_password %}<form method="post" style="margin-top:10px"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="smtp_test"><button type="submit">Send test email to sender</button></form>{% endif %}
 </div></details>

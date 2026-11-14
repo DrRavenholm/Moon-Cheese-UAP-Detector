@@ -194,6 +194,45 @@ def smtp_send(recipient,subject,body, config=None, *, notice_title=None, url='',
         client.send_message(message)
 
 
+
+def smtp_failure_message(exc, config=None):
+    """Safe, actionable explanation without the provider's possibly sensitive raw reply."""
+    config=config or {}
+    mode=config.get('security','starttls')
+    port=config.get('port','')
+    if isinstance(exc,smtplib.SMTPAuthenticationError):
+        return ('SMTP authentication rejected. Check the complete account username and the app password for that '
+                'same account; Gmail commonly requires two-step verification and an app password.')
+    if isinstance(exc,smtplib.SMTPNotSupportedError):
+        return ('The SMTP server does not support the selected TLS or authentication method. '
+                'Check that the hostname, port and encryption mode match the provider.')
+    if isinstance(exc,smtplib.SMTPRecipientsRefused):
+        return 'The SMTP server rejected the recipient address. Confirm the destination and provider restrictions.'
+    if isinstance(exc,smtplib.SMTPSenderRefused):
+        return 'The SMTP server rejected the sender address. Check the From address and permitted account aliases.'
+    if isinstance(exc,smtplib.SMTPDataError):
+        return 'The SMTP server refused the message after login. Check provider sending restrictions and quotas.'
+    if isinstance(exc,smtplib.SMTPServerDisconnected):
+        return (f'SMTP connection closed by the server ({mode}, port {port}). '
+                'Check hostname and encryption selection: STARTTLS usually uses port 587; SSL/TLS usually uses port 465. '
+                'Also verify that this provider accepts SMTP app-password sign-in.')
+    if isinstance(exc,ssl.SSLCertVerificationError):
+        return 'SMTP certificate verification failed. Check the server hostname, device date/time and provider TLS settings.'
+    if isinstance(exc,ssl.SSLError):
+        return 'SMTP TLS negotiation failed. Check whether the server expects STARTTLS (587) or SSL/TLS (465).'
+    if isinstance(exc,(TimeoutError,socket.timeout)):
+        return 'SMTP connection timed out. Check the server, port, internet connection and outbound firewall.'
+    if isinstance(exc,(ConnectionRefusedError,ConnectionResetError,socket.gaierror,ConnectionError)):
+        return 'Cannot connect to the SMTP server. Check DNS, server name, port and network access.'
+    if isinstance(exc,smtplib.SMTPResponseException):
+        return f'SMTP server rejected the operation (reply code {exc.smtp_code}); check account and provider settings.'
+    if isinstance(exc,smtplib.SMTPException):
+        return 'SMTP delivery failed. Check provider security settings, login method and sending permissions.'
+    if isinstance(exc,ValueError):
+        return str(exc)[:220] if str(exc) in ('Outgoing email is not enabled.',) else 'SMTP settings are incomplete or invalid.'
+    return 'SMTP delivery failed unexpectedly. Check provider settings and connection.'
+
+
 def migrate():
     with connection() as db:
         db.execute('''CREATE TABLE IF NOT EXISTS delivery_preferences (
@@ -438,7 +477,8 @@ def dispatch(now=None):
         except Exception as exc:
             # Do not leak credential material or remote server replies in the dashboard.
             state='failed' if item['attempts']>=4 else 'retry'
-            error=type(exc).__name__+': Delivery failed; check provider credentials, connectivity, or device permission.'
+            error=(smtp_failure_message(exc,smtp_settings()) if item['channel']=='email' else
+                   'Web Push delivery failed; check browser subscription, HTTPS and device permission.')
             results['failed']+=1
         next_try=(datetime.fromisoformat(now)+timedelta(minutes=min(60,5*2**max(0,item['attempts']-1)))).isoformat(timespec='seconds')
         with connection() as db:
