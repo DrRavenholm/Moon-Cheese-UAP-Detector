@@ -32,11 +32,11 @@ For test release `v0.9.9.5.3`:
 - Release checkbox: **Set as a pre-release**.
 - Uploaded Assets: `moon-cheese-uap-detector-v0.9.9.5.3.tar.gz` and `SHA256SUMS` only.
 
-For **this** stable `v1.0.0`:
+For **the next** stable `v1.0.1`:
 
-- Tag: `v1.0.0` pointing to the approved corresponding source commit.
+- Tag: `v1.0.1` pointing to the approved corresponding source commit.
 - Publish as **stable** when the matching code and checksum assets are ready so anonymous normal-channel installation and Repair can be tested; do not publicly announce final acceptance before those real tests pass.
-- Uploaded Assets: `moon-cheese-uap-detector-v1.0.0.tar.gz` and matching `SHA256SUMS` only.
+- Uploaded Assets: `moon-cheese-uap-detector-v1.0.1.tar.gz` and matching `SHA256SUMS` only.
 
 The versioned archive is the **complete installation package**, not GitHub's automatically generated Source code archive. The actual distribution package includes an internal `SHA256SUMS` and all necessary install/runtime files. Keep developer test reports outside public release assets.
 
@@ -45,15 +45,15 @@ The versioned archive is the **complete installation package**, not GitHub's aut
 1. Confirm the version is authorised and the application archive was produced from the corresponding approved source.
 2. Verify the external `SHA256SUMS` and the internal package checksums, archive safety, installation scripts and release notes.
 3. Verify the repo's tag points to the correct complete source commit, under GPLv3 with third-party attributions and no secrets.
-4. The public prerelease v0.9.9.5.3 anonymous installer has already passed. For v1.0.0, create its tag from the updated corresponding source and publish a **stable** release so the actual `latest` command can be tested.
-5. Test v1.0.0 on a clean SD card with the **normal stable** command:
+4. The public prerelease v0.9.9.5.3 anonymous installer has already passed. For v1.0.1, create its tag from the updated corresponding source and publish a **stable** release so the actual `latest` command can be tested.
+5. Test v1.0.1 on a clean SD card with the **normal stable** command:
 
    ```bash
    curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
    ```
 
 6. Verify dashboard, camera, login, recording, password-protected update/repair, preservation of data and installer summary as appropriate to fresh/upgrade tests.
-7. Also test **Repair current version** on v1.0.0 with a deliberately incorrect password (must be refused) and the signed-in administrator's correct password (must complete). Confirm existing user data survives upgrade/repair. The same stable installation command is:
+7. Also test **Repair current version** on v1.0.1 with a deliberately incorrect password (must be refused) and the signed-in administrator's correct password (must complete). Confirm existing user data survives upgrade/repair. The same stable installation command is:
 
    ```bash
    curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash

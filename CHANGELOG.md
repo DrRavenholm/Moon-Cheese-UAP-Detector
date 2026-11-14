@@ -1,14 +1,28 @@
 # Moon Cheese UAP Detector — Release History
 
+## v1.0.1 — 14 November 2026 (maintenance release)
+
+- Corrected the administrator Delivery History page crash; retained filtering and pagination.
+- Improved SMTP error explanations for authentication, TLS, connection and provider refusals, without exposing secrets.
+- Added four browser-local visitor themes: default Blue, Red, Green and Cheese Yellow.
+- Simplified Cloudflare Tunnel token setup guidance and documented exact permission groups, resource scopes and Error 1033 troubleshooting.
+- Removed the briefly appearing software-update reload link and improved release-status consistency.
+- Published administrator credential retrieval instructions prominently in the README and installer output.
+- Corrected outdated Time-lapse, email/Web Push, release-status and installation documentation.
+- Added a non-destructive Moon Cheese-owned systemd service inspection and manual repair helper.
+- Retained existing detector, camera, recordings, networking and user-data behaviour.
+
+# Moon Cheese UAP Detector — Release History
+
 This page summarises the main development milestones. The application's bundled `VERSION_HISTORY.md` retains the **full, detailed version-by-version history**; earlier entries must not be replaced by this summary.
 
-## v1.0.0 — 7 November 2026 (stable release candidate)
+## v1.0.0 — 7 November 2026 (public stable release)
 
 - First public stable-release package, built directly from the Raspberry Pi-tested v0.9.9.5.3 software.
 - Public anonymous GitHub one-line installer now targets the latest stable release when published; the exact prerelease test path was previously proven on a clean Pi.
 - Retains password-protected software Update/Repair, full-resolution photos, detector, Scheduled Video, Time-lapse Studio, About page and comprehensive Help/Version History.
 - Matching full corresponding GPLv3 source and third-party notices prepared for a tag on the updated Code branch.
-- No detector, network, camera or user-data migration changes; acceptance of v1.0.0 stable-channel repair must follow publication.
+- No detector, network, camera or user-data migration changes; correct-password v1.0.0 stable-channel repair subsequently passed on a Raspberry Pi.
 
 ## v0.9.9.5.3 — 7 November 2026 (development prerelease)
 

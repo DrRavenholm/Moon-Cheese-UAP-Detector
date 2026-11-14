@@ -6,13 +6,13 @@ Moon Cheese UAP Detector combines automatic camera monitoring with tools to capt
 
 A detection is **not** identification, and Moon Cheese does not claim to prove that any recorded object or event is unexplained.
 
-> **v1.0.0 stable release candidate:** Built from the Raspberry Pi-tested v0.9.9.5.3 baseline. Publish the matching source and stable release assets before using the normal one-line installer. The previous anonymous public prerelease installation worked; v1.0.0 stable-channel acceptance remains pending until published and tested.
+> **Current release: v1.0.1 (maintenance update).** Moon Cheese v1.0.0 was publicly released on 7 November 2026. The public one-line installation and GitHub upgrade/repair were subsequently tested on real Raspberry Pi installations. v1.0.1 fixes delivery-history errors and adds visitor themes, improved SMTP diagnostics and clearer Cloudflare setup guidance. A fresh v1.0.1 installation still requires acceptance on real hardware.
 
 ## Install Moon Cheese
 
 ### One-line installation — latest stable release
 
-After v1.0.0 is published as a stable GitHub Release, install on a supported Raspberry Pi OS system with:
+Install the latest published stable Moon Cheese release on a supported Raspberry Pi OS system with:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detecto
 
 The bootstrap downloads the latest **stable** GitHub Release's complete Moon Cheese installation archive, checks the SHA-256 asset digest, validates the archive structure, then runs the archive's original `install.sh`. It is designed for clean installations as well as existing-installation upgrades; the main installer retains responsibility for backups and service setup.
 
-**This normal command does not select prereleases.** It must be tested against the actual published stable release on a clean test Raspberry Pi before declaring v1.0.0 accepted.
+**This command selects the latest stable release** and does not require a GitHub account or access token. The stable installation path has been tested on Raspberry Pi hardware; check the v1.0.1 release notes for its specific acceptance status.
 
 ### One-line installation — public prerelease testing
 
@@ -33,6 +33,36 @@ curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detecto
 This uses the **same bootstrap**, checksum checks and packaged installer as the stable command; the flag selects a specific public prerelease instead of GitHub's latest stable release. **No GitHub login, token, PC download or manual file transfer is required.**
 
 Prereleases remain available for testing. They do not substitute for final acceptance of the stable v1.0.0 release.
+
+### Find your administrator password after installation
+
+If you closed PuTTY or the terminal before noting the initial credentials, open a terminal on the Raspberry Pi and run:
+
+```bash
+sudo uapctl credentials
+```
+
+**This is the command to retrieve the original generated administrator username and password.** If you subsequently changed the password, sign in with the new one instead. Keep these credentials private. The installer also prints this command clearly at completion.
+
+### Cloudflare Tunnel setup
+
+For optional public HTTPS access without port forwarding, open **Administration → System Administration → Network and remote access → Cloudflare Tunnel**, then expand **Cloudflare setup guide**. It explains exactly how to create your own restricted token, choose **Account → Cloudflare Tunnel → Edit**, **Zone → DNS → Edit** and **Zone → Zone → Read**, limit the token to your account/domain and locate the Account ID and Zone ID. Never share your API token or use a Global API Key. Cloudflare Error 1033 means the connector is not healthy; see the in-app guide for safe checks.
+
+### Existing installation service repair
+
+Normal Update/Repair preserves modified systemd service definitions. If a competing application or manual changes have affected Moon Cheese services, inspect **only** Moon Cheese service definitions with:
+
+```bash
+sudo python3 /opt/uap-detector/uap/service_repair.py --check
+```
+
+If the output identifies damaged Moon Cheese service files, you may explicitly restore them with:
+
+```bash
+sudo python3 /opt/uap-detector/uap/service_repair.py --apply
+```
+
+The helper backs up changed unit definitions and reloads systemd; it **does not restart** active services or alter another application’s units. Inspect conflicting camera owners and port use separately before deciding whether any restart is safe.
 
 See [Installation and requirements](docs/INSTALLATION.md) for more information.
 

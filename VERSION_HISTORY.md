@@ -1,3 +1,16 @@
+## v1.0.1 — Reliability and Visitor Theme Maintenance
+**Date:** 14 November 2026
+
+- Fixed the administrator Delivery History HTTP 500 error and preserved filter, page and failed-delivery retry behaviour.
+- Improved SMTP failure explanations for connection, TLS, authentication, sender and recipient errors without exposing secrets.
+- Added Blue, Red, Green and Cheese Yellow browser-local themes in the site header, available to public visitors.
+- Added Cloudflare Tunnel API token instructions, including scoped permissions, ID locations and Error 1033 checks.
+- Removed the short-lived update-status reload link and prevented cached release checks from falsely reporting a newer version.
+- Added visible installation credential retrieval instructions and made the installer completion message clearer.
+- Introduced a separate manual service-file check/restore helper with backups, no third-party service changes and no forced restarts.
+- Corrected outdated Basic Time-lapse, email/Web Push and v1.0 publication documentation.
+- Retained existing cameras, detection, networking, recordings, account data and settings; hardware acceptance of this maintenance release remains pending.
+
 ## v1.0.0 — First Public Stable Release
 **Date:** 7 November 2026
 

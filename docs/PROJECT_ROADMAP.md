@@ -1,6 +1,6 @@
-# Moon Cheese UAP Detector — v1.0.0 Release Status and Roadmap
+# Moon Cheese UAP Detector — v1.0.1 Maintenance and Roadmap
 
-**Current prepared release: v1.0.0 (7 November 2026).** This is a public stable-release build awaiting final confirmation on the actual published release. The user-tested v0.9.9.5.3 baseline is preserved.
+**Current prepared maintenance release: v1.0.1 (14 November 2026).** The user confirmed that v1.0.0 was published as stable and upgraded/repaired successfully on the original Pi, while the public anonymous installer succeeded for a separate test installation. v1.0.1 fixes confirmed delivery and presentation issues; its final physical acceptance remains pending.
 
 ## Implemented and physically confirmed on Raspberry Pi
 
@@ -12,14 +12,13 @@
 - A public, anonymous version-pinned prerelease installation of v0.9.9.5.3 from a clean SD card **passed**; no GitHub login, token or manual PC transfer was required.
 - Entering a deliberately incorrect administrator password produced **Denied** in v0.9.9.5.3.
 
-## Final v1.0.0 stable-release acceptance
+## v1.0.1 acceptance
 
-1. Commit the matching complete source from this build to the GitHub Code page; check public repository history and release assets for private data. **Create v1.0.0 tag only after the matching source commit.**
-2. Upload the complete `moon-cheese-uap-detector-v1.0.0.tar.gz` and its external `SHA256SUMS` as the **only manual GitHub release assets** and publish the release as **stable**, not prerelease.
-3. On a clean test SD card, run the ordinary one-line installer **without** `--prerelease`, then confirm dashboard version, sign-in, camera, full-resolution capture and initial installation summary.
-4. On the existing/test machine, check v1.0.0's public stable channel. Ensure a deliberately incorrect administrator password is rejected and a **correct** administrator password allows same-version Repair to complete with preserved user data. Existing private testing credentials must be disabled explicitly before testing stable-channel checks on an earlier device.
-5. Verify camera recordings, scheduled video/time-lapse, saved media, existing network configuration, notifications, backups and recovery on representative hardware. Keep the established working SD card until the new release is accepted.
-6. Confirm no unexpected regressions from historical tests; distinguish source/static validation from actual Pi hardware and network testing. A final security review of public repository history and deployed configuration is still required; a token-pattern scan cannot replace it.
+1. Commit the matching extracted source to GitHub Code **before** creating the v1.0.1 tag.
+2. Upload only `moon-cheese-uap-detector-v1.0.1.tar.gz` and its external `SHA256SUMS` to the new GitHub Release.
+3. Verify Delivery History (including empty and populated ledger), SMTP test errors, four visitor themes, public pages and the Cloudflare setup instructions.
+4. Check camera/detector monitoring, jobs, networking and preservation of settings on the physical Pi. Test normal Update/Repair with an administrator password when the latest stable release is available.
+5. Service-file repair is opt-in only and never blindly restarts the camera or third-party services. Jim's intermittent Cloudflare Error 1033 and Gmail account require real-Pi diagnostics when available; documentation and generic errors cannot prove a fix to those external problems.
 
 ## Hardware status
 

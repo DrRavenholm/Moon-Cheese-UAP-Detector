@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. The v1.0.0 installer and source are prepared as a release candidate. The stable command becomes live once the matching public stable GitHub Release is published.
+This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1 maintenance release uses the same one-command stable installation process.
 
 ## Before installation
 
@@ -24,7 +24,7 @@ If you later want to test a different published prerelease, change only the tag 
 
 ## Public stable installation — v1.0 and later
 
-Once the v1.0.0 stable Release is published with both required assets and its source tag, test the actual permanent one-line command on a clean SD card:
+For the latest published stable Moon Cheese release, use the permanent one-line command on a supported Raspberry Pi:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
@@ -42,6 +42,16 @@ This automatically selects GitHub's **latest stable** release. A repository cont
 
 The official release also contains an external `SHA256SUMS` asset for independent archive checks and an internal `SHA256SUMS` for its packaged files. The bootstrap currently checks GitHub's API digest, while the packaged installer validates its internal files. A checksum alone is not independent publisher-signature verification.
 
+## Retrieve the first administrator password
+
+If you missed the credentials at the end of installation or closed the terminal, use PuTTY or a local terminal on the Pi:
+
+```bash
+sudo uapctl credentials
+```
+
+This shows the **original generated** username and password, if still retained. If the password has since been changed, use the new password. Keep this information private.
+
 ## After installation
 
 Check the dashboard using the local address printed **after installation completes**. Verify the login details, live camera, capture, recordings and access to **Administration → System Health**. During a prerelease test, verify that the installed version matches the selected tag.
@@ -58,6 +68,10 @@ For an existing installation, the dashboard's **Software updates** panel support
 
 For the maintainer's source and release preparation requirements, see [Publishing releases](RELEASING.md).
 
-## v1.0.0 acceptance check
+## v1.0.1 acceptance check
 
-After the stable release is public, verify the dashboard displays **v1.0.0**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v0.9.9.5.3 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
+After the v1.0.1 stable release is public, verify the dashboard displays **v1.0.1**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
+
+## Cloudflare Tunnel permissions and troubleshooting
+
+Tunnel access is optional. On the dashboard, expand System Administration → Network and remote access → Cloudflare Tunnel → Cloudflare setup guide. It explains where to obtain your Account ID and Zone ID, and to create a custom API token limited to your own Account and DNS Zone. Configure Account → Cloudflare Tunnel → Edit, Zone → DNS → Edit and Zone → Zone → Read. Enter these into Moon Cheese alongside your chosen subdomain; never share an API token or use a Global API Key. Cloudflare Error 1033 usually means a disconnected `cloudflared` connector or a DNS target pointing to the wrong tunnel; consult the same guide before changing any DNS resources.

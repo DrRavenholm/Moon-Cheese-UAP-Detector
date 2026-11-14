@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.0: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.0'
+VERSION='1.0.1'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
@@ -187,6 +187,12 @@ if not cred.exists():
 PY
   chown root:"$SERVICE_GROUP" "$ETC"/{config.json,secret.key,auth.json,environment}
 fi
+# Save official Moon Cheese-only systemd unit templates for optional diagnostics/repair.
+# The routine install/upgrade still does NOT overwrite any existing custom unit.
+install -d -m 0755 /opt/uap-detector/service-units
+for unit in systemd/*.service systemd/*.timer systemd/*.path; do
+  [[ -f "$unit" ]] && install -m 0644 "$unit" "/opt/uap-detector/service-units/$(basename "$unit")"
+done
 # Existing custom service units are never overwritten. A fresh install uses bundled units.
 for name in uap-dashboard.service uap-detector.service uap-cleanup.service uap-cleanup.timer \
             uap-notifications.service uap-notifications.timer uap-power-action.service uap-power-action.path \
@@ -365,8 +371,10 @@ info "Moon Cheese UAP Detector v$VERSION — installation complete"
 if (( EXISTING )); then
   echo "Upgraded/repaired existing installation. Root-only application backup: $BACKUP"
   echo 'Existing users, media, settings, SMTP, Web Push and network configuration preserved.'
+  echo 'To view the ORIGINAL installation credentials (if retained): sudo uapctl credentials'
 else
-  echo 'First administrator login: sudo uapctl credentials (keep these credentials private)'
+  echo 'FIRST ADMINISTRATOR LOGIN: run sudo uapctl credentials to view the generated username and password.'
+  echo 'Keep these credentials private; this command shows the ORIGINAL password, not subsequent password changes.'
 fi
 echo 'Local dashboard addresses:'
 if command -v ip >/dev/null 2>&1; then
