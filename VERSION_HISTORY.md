@@ -1,3 +1,14 @@
+## v1.0.1.1 — Theme, Service Repair and Photography Countdown
+**Date:** 14 November 2026
+
+- Applied saved colours before browser style rendering to avoid default-blue flashes between pages.
+- Added compact pop-out theme choices for Blue, Red, Green and Cheese Yellow, available to everyone.
+- Updated remaining fixed blue panels across Camera Settings, Help, Public Observations, media and storage pages; maintained black image backgrounds and red danger controls.
+- Added password-protected Repair services to System Health using the existing root-owned maintenance queue, with backups, service definition restores, no camera restarts and no changes to unrelated applications.
+- Renamed the administrator Live Camera page to Photography without changing existing URLs or camera controls.
+- Added an approximate remaining-seconds countdown for manual long exposures, starting only after the still-camera pipeline is ready, followed by a separate saving stage.
+- Updated Help, README and GitHub release guidance; no migrations or changes to established recordings, networking, accounts or storage.
+
 ## v1.0.1 — Reliability and Visitor Theme Maintenance
 **Date:** 14 November 2026
 

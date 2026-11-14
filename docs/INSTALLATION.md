@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1 maintenance release uses the same one-command stable installation process.
+This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.1 maintenance release uses the same one-command stable installation process.
 
 ## Before installation
 
@@ -68,9 +68,11 @@ For an existing installation, the dashboard's **Software updates** panel support
 
 For the maintainer's source and release preparation requirements, see [Publishing releases](RELEASING.md).
 
-## v1.0.1 acceptance check
+## v1.0.1.1 acceptance check
 
-After the v1.0.1 stable release is public, verify the dashboard displays **v1.0.1**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
+Also verify theme persistence without blue flashes, the new colour pop-out, service repair safeguards and a real manual long-exposure countdown on Photography.
+
+After the v1.0.1.1 stable release is public, verify the dashboard displays **v1.0.1.1**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
 
 ## Cloudflare Tunnel permissions and troubleshooting
 

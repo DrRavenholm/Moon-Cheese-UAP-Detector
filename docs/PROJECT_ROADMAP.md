@@ -1,6 +1,6 @@
-# Moon Cheese UAP Detector — v1.0.1 Maintenance and Roadmap
+# Moon Cheese UAP Detector — v1.0.1.1 Maintenance and Roadmap
 
-**Current prepared maintenance release: v1.0.1 (14 November 2026).** The user confirmed that v1.0.0 was published as stable and upgraded/repaired successfully on the original Pi, while the public anonymous installer succeeded for a separate test installation. v1.0.1 fixes confirmed delivery and presentation issues; its final physical acceptance remains pending.
+**Current prepared maintenance release: v1.0.1.1 (14 November 2026).** The user confirmed that v1.0.0 was published as stable and upgraded/repaired successfully on the original Pi, while the public anonymous installer succeeded for a separate test installation. v1.0.1.1 focuses on theme presentation, protected service-file repair, and Photography exposure progress; its final physical acceptance remains pending. Delivery History and SMTP diagnostics were addressed in v1.0.1, with real-world provider tests still outstanding.
 
 ## Implemented and physically confirmed on Raspberry Pi
 
@@ -12,13 +12,13 @@
 - A public, anonymous version-pinned prerelease installation of v0.9.9.5.3 from a clean SD card **passed**; no GitHub login, token or manual PC transfer was required.
 - Entering a deliberately incorrect administrator password produced **Denied** in v0.9.9.5.3.
 
-## v1.0.1 acceptance
+## v1.0.1.1 acceptance
 
-1. Commit the matching extracted source to GitHub Code **before** creating the v1.0.1 tag.
-2. Upload only `moon-cheese-uap-detector-v1.0.1.tar.gz` and its external `SHA256SUMS` to the new GitHub Release.
+1. Commit the matching extracted source to GitHub Code **before** creating the v1.0.1.1 tag.
+2. Upload only `moon-cheese-uap-detector-v1.0.1.1.tar.gz` and its external `SHA256SUMS` to the new GitHub Release.
 3. Verify Delivery History (including empty and populated ledger), SMTP test errors, four visitor themes, public pages and the Cloudflare setup instructions.
 4. Check camera/detector monitoring, jobs, networking and preservation of settings on the physical Pi. Test normal Update/Repair with an administrator password when the latest stable release is available.
-5. Service-file repair is opt-in only and never blindly restarts the camera or third-party services. Jim's intermittent Cloudflare Error 1033 and Gmail account require real-Pi diagnostics when available; documentation and generic errors cannot prove a fix to those external problems.
+5. Service-file repair is available from System Health with administrator-password confirmation and never blindly restarts the camera or unrelated services. Jim's intermittent Cloudflare Error 1033 and Gmail account require real-Pi diagnostics when available; documentation and generic errors cannot prove a fix to those external problems.
 
 ## Hardware status
 

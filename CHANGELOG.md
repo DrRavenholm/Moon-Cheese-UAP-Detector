@@ -1,5 +1,12 @@
 # Moon Cheese UAP Detector — Release History
 
+## v1.0.1.1 — 14 November 2026 (maintenance release)
+
+- Fixed theme flash, completed themed panel colours, and introduced a compact selector for all visitors.
+- Added a protected and non-disruptive Repair services action to System Health.
+- Renamed Live Camera to Photography in navigation and added a manual still-exposure countdown.
+- Updated Help, README and installation documentation without changing detection, networking or recording logic.
+
 ## v1.0.1 — 14 November 2026 (maintenance release)
 
 - Corrected the administrator Delivery History page crash; retained filtering and pagination.

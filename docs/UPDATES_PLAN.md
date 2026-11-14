@@ -1,6 +1,6 @@
 # Moon Cheese — Software updates and repair
 
-**Implemented and maintained in Moon Cheese v1.0.1.** This page describes the actual Software updates implementation, separate public stable and optional private-testing channels, and the required first-stable Pi acceptance.
+**Implemented and maintained in Moon Cheese v1.0.1.1.** This page describes the actual Software updates implementation, separate public stable and optional private-testing channels, and the required first-stable Pi acceptance.
 
 ## Administration → System Health
 
@@ -26,13 +26,13 @@ Before retiring private testing, deliberately switch the test Pi back to the nor
 
 The root-owned update worker downloads the complete versioned application archive and its integrity information, validates the release and archive, checks for unsafe active operations, and delegates to the **same installer** used for fresh installation and repair. The installer preserves configured user data and creates backups according to its upgrade workflow. Status is reported back to the dashboard.
 
-**Physical Raspberry Pi confirmation:** private GitHub upgrade v0.9.9.5.1 → v0.9.9.5.2, a subsequent update check and a same-version repair passed. v0.9.9.5.3 later upgraded successfully and a public anonymous one-line fresh installation also passed. A deliberately wrong administrator password was rejected. Correct-password Repair with the public v1.0.0 stable release subsequently passed on the original Pi. The v1.0.1 update and repair still need acceptance on real hardware.
+**Physical Raspberry Pi confirmation:** private GitHub upgrade v0.9.9.5.1 → v0.9.9.5.2, a subsequent update check and a same-version repair passed. v0.9.9.5.3 later upgraded successfully and a public anonymous one-line fresh installation also passed. A deliberately wrong administrator password was rejected. Correct-password Repair with the public v1.0.0 stable release subsequently passed on the original Pi. The v1.0.1.1 update and repair still need acceptance on real hardware.
 
 ## Stable-release acceptance and future maintenance
 
 - Publish matching source and each new stable versioned release archive with its external `SHA256SUMS` after approval.
 - Test the **normal** anonymous one-line installer on a clean Raspberry Pi without `--prerelease`; public prerelease installation has already been confirmed.
-- Previously passed: v1.0.0 correct-password same-version Repair. For v1.0.1, confirm correct-password Repair and preserved data on real hardware after publication.
+- Previously passed: v1.0.0 correct-password same-version Repair. For v1.0.1.1, confirm correct-password Repair and preserved data on real hardware after publication.
 - Verify scheduled update notices at the existing administrator-configured observation-summary time, without duplicate alerts; confirm stored settings and backup/rollback after actual upgrade.
 - Inspect published source and repository history for private material and review failure paths; checksums alone are not a publisher signature.
 
