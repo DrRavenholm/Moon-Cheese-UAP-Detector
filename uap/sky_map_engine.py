@@ -81,18 +81,22 @@ def _cached_catalogue(signature):
         names=json.loads((ROOT/'stars'/'starnames.json').read_text())
         if not isinstance(names,dict):names={}
     except (OSError,ValueError):names={}
+    star_candidates=[]
     for f in features('stars','stars.8.json'):
         coords=f.get('geometry',{}).get('coordinates',[])
         p=f.get('properties') or {}
         if len(coords)<2 or not all(isinstance(x,(int,float)) for x in coords[:2]):continue
         try:mag=float(p.get('mag',p.get('magnitude',8)))
         except (ValueError,TypeError):continue
-        if mag>6.5:continue
+        if not math.isfinite(mag) or mag>6.5:continue
         nameinfo=names.get(str(f.get('id','')),{})
         if not isinstance(nameinfo,dict):nameinfo={}
         proper=nameinfo.get('iau') or nameinfo.get('name') or nameinfo.get('desig') or p.get('desig') or p.get('name') or ''
-        output['stars'].append([coords[0],coords[1],round(mag,2),str(proper)[:60]])
-        if len(output['stars'])>=6500:break
+        star_candidates.append([coords[0],coords[1],round(mag,2),str(proper)[:60]])
+    # Brightness-first ensures a bounded payload is distributed across the *entire* sky,
+    # not just the first arbitrary catalogue entries / part of the celestial sphere.
+    star_candidates.sort(key=lambda entry:entry[2])
+    output['stars']=star_candidates[:16000]
     for f in features('constellations','constellations.lines.json'):
         geo=f.get('geometry') or {}
         if geo.get('type')=='MultiLineString':segments=geo.get('coordinates',[])
@@ -151,8 +155,10 @@ def search(query):
             if len(matches)>=30:break
     for kind, entries in (('star',catalogue()['stars']),('deep_sky',catalogue()['deep_sky'])):
         for obj in entries:
-            if obj[3] and query in obj[3].casefold():
-                matches.append({'id':kind+':'+obj[3],'name':obj[3],'kind':kind,'ra':obj[0],'dec':obj[1]})
+            # Star entries: [RA, Dec, magnitude, name]. Deep sky: [RA, Dec, name].
+            label=obj[3] if kind=='star' and len(obj)>=4 else obj[2] if len(obj)>=3 else ''
+            if isinstance(label,str) and label and query in label.casefold():
+                matches.append({'id':kind+':'+label,'name':label,'kind':kind,'ra':obj[0],'dec':obj[1]})
                 if len(matches)>=30:break
     return matches[:30]
 
@@ -162,11 +168,19 @@ def positions(at, selected='', lat=None, lon=None):
     load,load_file,wgs84,EarthSatellite=_skyfield()
     t,ts=_time(at)
     observer=wgs84.latlon(latitude_degrees=lat,longitude_degrees=lon)
-    result={'time':at.isoformat(),'latitude':lat,'longitude':lon,'planets':[], 'satellites':[], 'selected':None,'track':[]}
+    result={'time':at.isoformat(),'latitude':lat,'longitude':lon,'planets':[], 'satellites':[], 'selected':None,'track':[], 'solar':None, 'satellite_total':0,'satellite_sampled':0}
     eph=ROOT/'planets'/'de440s.bsp'
     if eph.is_file():
         planets=_ephemeris(eph.stat().st_mtime_ns)
         place=planets['earth']+observer
+        # Sun's declination and subsolar longitude in the Earth's date-of-observation
+        # equatorial frame. This drives the *whole Earth* terminator and twilight bands.
+        try:
+            sun_pos=planets['earth'].at(t).observe(planets['sun']).apparent()
+            sun_ra,sun_dec,_=sun_pos.radec(epoch='date')
+            sun_lon=(sun_ra.hours*15-t.gast*15+180)%360-180
+            result['solar']={'latitude':round(sun_dec.degrees,5),'longitude':round(sun_lon,5)}
+        except (KeyError,ValueError,TypeError,AttributeError):pass
         for name,key in BODIES.items():
             try:
                 apparent=place.at(t).observe(planets[key]).apparent()
@@ -180,16 +194,22 @@ def positions(at, selected='', lat=None, lon=None):
     key=selected.removeprefix('sat:') if selected.startswith('sat:') else ''
     if orbital:
         focus=[r for r in orbital if r.get('NORAD_CAT_ID')==key] if key else []
-        # Sort in a stable, source-independent fashion: first active items are an overview,
-        # not a claim to display every catalogue object. All entries remain searchable.
-        preview=orbital[:240]
+        # A uniformly spaced sample from sorted satellite IDs covers the global
+        # orbital catalogue without relying on file order or the detector's horizon.
+        # All objects remain searchable. Always include the chosen object.
+        all_rows=sorted(orbital,key=lambda r:int(r['NORAD_CAT_ID']) if r['NORAD_CAT_ID'].isdigit() else 0)
+        count=min(240,len(all_rows))
+        preview=[all_rows[(i*len(all_rows))//count] for i in range(count)] if count else []
         entries={r['NORAD_CAT_ID']:r for r in preview+focus}
+        result['satellite_total']=len(orbital)
+        result['satellite_sampled']=len(entries)
         for row in entries.values():
             try:
                 sat=EarthSatellite.from_omm(ts,row)
                 topocentric=(sat-observer).at(t)
                 alt,az,distance=topocentric.altaz()
-                if alt.degrees<-5 and row['NORAD_CAT_ID']!=key:continue
+                # Keep below-horizon objects for the Earth map; the sky canvas
+                # independently hides objects below its local horizon.
                 sub=wgs84.subpoint_of(sat.at(t))
                 obj={'id':'sat:'+row['NORAD_CAT_ID'],'name':row.get('OBJECT_NAME','Satellite')[:90],
                      'kind':'satellite','alt':round(alt.degrees,3),'az':round(az.degrees,3),

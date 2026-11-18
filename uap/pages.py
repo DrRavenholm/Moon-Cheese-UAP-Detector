@@ -16,6 +16,17 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.1.3','title':'Sky Maps Accuracy and Usability Corrections','date':'18 Nov 2026',
+   'summary':'Fix sky-object search and uneven star coverage; improve chart readability, global satellite positions, live time and Earth twilight shading.',
+   'details':[
+     'Fixed a deep-sky object indexing exception that made all object searches return an HTML server error; added controlled JSON failures.',
+     'Selected bright stars from the full downloaded catalogue instead of stopping at the first 6,500 rows; fixed deep-sky result highlighting.',
+     'Added a star brightness slider and independent constellation-name/line layers with overlap-aware labelling; disabled cluttered deep-sky symbols by default.',
+     'Separated global sampled satellite positions from local above-horizon visibility; kept a searched satellite available on both maps, even when below the detector horizon.',
+     'Added selectable day/night and civil, nautical and astronomical twilight shading from the locally stored JPL ephemeris.',
+     'Distinguished LIVE Now, selected observation times and accelerated playback, preserving old observation map links and valid saved timing.',
+     'Preserved the Raspberry Pi-tested Photography countdown and event links along with existing detector, camera, downloading, service repair and saved data.'
+   ]},
   {'version':'1.0.1.2','title':'Sky Maps, Detection Zones and Recovery Improvements','date':'17 Nov 2026',
    'summary':'Add offline-first linked Sky Maps and astronomical downloads, detection-zone editing, active Service Repair and persistent Photography progress.',
    'details':[

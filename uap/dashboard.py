@@ -2965,7 +2965,11 @@ def sky_maps_catalogue():
 def sky_maps_search():
     if not logged_in():abort(403)
     from sky_map_engine import search
-    return jsonify(search(request.args.get('q','')[:75]))
+    try:
+        return jsonify(search(request.args.get('q','')[:75]))
+    except Exception:
+        app.logger.exception('Sky Map object search failed')
+        return jsonify(error='Astronomical search failed. Check the installed catalogues.'),503
 
 @app.route('/sky-maps/positions')
 def sky_maps_positions():

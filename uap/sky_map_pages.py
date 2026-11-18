@@ -7,12 +7,13 @@ SKY_MAPS = '''
 {% if not installed %}<p class="notice">No astronomical datasets are installed. An administrator can start <a href="{{url_for('sky_maps_data')}}">Sky Maps → Data &amp; Updates</a> to download them once; the maps then work offline.</p>{% endif %}
 <div id="sky-map-root" data-lat="{{lat}}" data-lon="{{lon}}" data-event-time="{{event_time}}" data-event-id="{{event_id}}" data-location-ready="{{1 if not missing_location else 0}}">
 <section class="panel">
-  <div class="row between"><h2>Find &amp; track objects</h2><span class="note" id="sky-time-label">—</span></div>
+  <div class="row between"><h2>Find &amp; track objects</h2><span class="note"><strong id="sky-time-mode">—</strong> · <span id="sky-time-label">—</span></span></div>
   <div class="row" style="gap:12px;align-items:flex-start;flex-wrap:wrap">
     <div style="flex:2;min-width:210px"><label for="sky-search">Object search</label><input id="sky-search" placeholder="ISS, NORAD number, Mars, Polaris…" autocomplete="off"><div id="sky-results" class="sky-search-results"></div></div>
     <details class="sky-layers"><summary>☷ Local sky layers</summary><div>
       <label class="checkline"><input type="checkbox" data-sky-layer="stars"> Stars</label>
-      <label class="checkline"><input type="checkbox" data-sky-layer="constellations"> Constellation lines and names</label>
+      <label class="checkline"><input type="checkbox" data-sky-layer="constellation_lines"> Constellation lines</label>
+      <label class="checkline"><input type="checkbox" data-sky-layer="constellation_names"> Constellation names</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="planets"> Sun, Moon and planets</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="satellites"> Satellites</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="deep_sky"> Bright deep-sky objects</label>
@@ -22,13 +23,20 @@ SKY_MAPS = '''
       <label class="checkline"><input type="checkbox" data-earth-layer="satellites"> Satellites</label>
       <label class="checkline"><input type="checkbox" data-earth-layer="track"> Selected satellite ground track</label>
       <label class="checkline"><input type="checkbox" data-earth-layer="detector"> Detector position</label>
+      <label class="checkline"><input type="checkbox" data-earth-layer="daynight"> Day/night shading</label>
+      <label class="checkline"><input type="checkbox" data-earth-layer="twilight"> Civil, nautical and astronomical twilight</label>
     </div></details>
+  </div>
+  <div class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
+    <label for="sky-magnitude" style="margin:0">Star brightness limit: <strong id="sky-magnitude-label">4.5</strong></label>
+    <input id="sky-magnitude" type="range" min="1" max="6.5" step="0.5" value="4.5" style="width:220px;max-width:100%;margin:0">
+    <span class="note">Lower = fewer, brighter stars; higher = more stars. Deep-sky symbols and constellation names are optional.</span>
   </div>
   <p class="note" id="sky-selection">Select an object from search to highlight it on the map.</p>
   <p class="note" id="sky-status" role="status">Reading local sky catalogues…</p>
 </section>
 <div class="sky-map-grid">
-  <section class="panel"><h2>Sky above the detector</h2><p class="note">All-sky view · North at top · Zenith at centre · Horizon at edge</p><canvas id="sky-local" class="sky-map-canvas" aria-label="Calculated sky positions"></canvas></section>
+  <section class="panel"><h2>Sky above the detector</h2><p class="note">All-sky view · North at top · Zenith at centre · Horizon at edge</p><p class="note" id="sky-sun-status">Sun position is available after downloading the planetary ephemeris.</p><canvas id="sky-local" class="sky-map-canvas" aria-label="Calculated sky positions"></canvas></section>
   <section class="panel"><h2>Earth &amp; satellite tracking</h2><p class="note">Selected orbital objects and approximate predicted ground tracks</p><canvas id="sky-earth" class="sky-map-canvas" aria-label="Satellite ground track and world map"></canvas></section>
 </div>
 <section class="panel"><h2>Shared timeline</h2>
@@ -40,7 +48,8 @@ SKY_MAPS = '''
     <div><label for="sky-speed">Playback speed</label><select id="sky-speed"><option value="1">1×</option><option value="10">10×</option><option value="60" selected>60×</option><option value="300">300×</option><option value="3600">3600×</option></select></div>
   </div>
   <label for="sky-offset">Quick time offset from now (hours)</label><input id="sky-offset" type="range" min="-24" max="24" value="0" step="1">
-  <p class="note">Satellite positions are predictions based on orbital elements, not a live GPS feed. Outdated or missing elements reduce confidence; historical records may not have suitable archived data.</p>
+  <p class="note" id="sky-satellite-summary">The Earth map shows a global sample, not every tracked object. Search to locate a specific satellite anywhere on Earth.</p>
+  <p class="note">Satellite positions are predictions based on orbital elements, not a live GPS feed. Outdated or missing elements reduce confidence; historical records may not have suitable archived data. The day/night and twilight overlay uses the downloaded JPL planetary ephemeris.</p>
 </section></div>
 <script src="{{url_for('sky_maps_js')}}" defer></script>
 '''
