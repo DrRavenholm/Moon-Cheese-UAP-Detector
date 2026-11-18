@@ -247,8 +247,6 @@ def enqueue_service_repair(admin):
     current=inspect()
     if any(x.startswith('symlink') for x in current.values()):
         raise ValueError('A service definition is a symbolic link; investigate manually before repairing.')
-    if not any(x in ('missing','modified') for x in current.values()):
-        raise ValueError('All installed Moon Cheese service definitions match; no repair is needed.')
     from datetime import timedelta
     last=_read(STATUS)
     try: age=datetime.now(timezone.utc)-datetime.fromisoformat(last['updated_utc'])
@@ -258,7 +256,7 @@ def enqueue_service_repair(admin):
         raise ValueError('Another software maintenance operation is already queued.')
     jobid=secrets.token_hex(16)
     _write(STATUS,{'state':'queued','action':'services','version':VERSION,
-                   'message':'Inspecting and restoring Moon Cheese-owned systemd definitions only.',
+                   'message':'Reasserting Moon Cheese services. Monitoring may be interrupted temporarily.',
                    'updated_utc':datetime.now(timezone.utc).isoformat(timespec='seconds'),'id':jobid})
     _write(REQUESTS/(jobid+'.json'),{'action':'services','version':VERSION,
                                     'admin':str(admin)[:64],'id':jobid})

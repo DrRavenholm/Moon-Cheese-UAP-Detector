@@ -480,8 +480,9 @@ def help_html():
         ('Time-lapse Studio',['Time-lapse Studio','Time-lapse Studio — corrections','Time-lapse storage planning']),
         ('Photograph Gallery',['Photograph Gallery']),
         ('Public observation pages',['Public observation pages'])]),
+      ('Sky Maps', [('Explore sky & Earth',['Sky Maps exploration']),('Data & Updates',['Sky Maps data & updates'])]),
       ('Administration', [
-        ('Camera & Detector Settings',['Camera settings','Event-storm protection']),
+        ('Camera & Detector Settings',['Camera settings','Event-storm protection','Detection zones']),
         ('Accounts and access',['Accounts and access']),
         ('Notifications and reports',['Notifications and reports','Email delivery','Browser Push',
                                      'Notification email and links','Delivery history and compact settings']),
@@ -489,7 +490,7 @@ def help_html():
         ('System Administration',['System Administration','Backup contents and verification','Installation and supported hardware']),
         ('Network and remote access',['Network Setup','Cloudflare Tunnel management',
                                       'Local network addresses and Tunnel cleanup']),
-        ('System Health',['System health and troubleshooting','Scheduled job recovery','Software updates'])]),
+        ('System Health',['System health and troubleshooting','Scheduled job recovery','Software updates','Service reassertion'])]),
       ('Information', [('Version history',['Version history']),('About Moon Cheese',['About Moon Cheese'])])
     ]
     used=[name for _,groups in hierarchy for _,sources in groups for name in sources]
@@ -545,3 +546,27 @@ GUIDE.extend([('Local network addresses and Tunnel cleanup', [
  ('Existing Tunnel DNS prevents a new one', 'The wizard checks for existing DNS entries before creating a new Tunnel. Moon Cheese verifies that an existing inactive Tunnel belongs to the expected Moon Cheese hostname and localhost route. An orphaned CNAME pointing to a deleted Tunnel can be repaired automatically for the selected hostname. Unrelated active and non-Tunnel services remain protected. An unrelated record is never silently overwritten.'),
  ('Tunnel deletion status', 'Disable Tunnel only stops the local connector and preserves Cloudflare DNS and Tunnel records. Remove managed Tunnel requires disabling it first and deletes only the exact managed resources. If Cloudflare still lists the Tunnel or DNS record, Moon Cheese reports incomplete removal and preserves the record for retry instead of claiming success.')
 ])])
+
+# v1.0.1.2 — new chapters are placed in the appropriate navigation groups.
+GUIDE.extend([
+ ('Sky Maps exploration', [
+  ('Local sky and Earth', 'Sky Maps → Explore Sky Maps displays a local all-sky chart for the detector coordinates beside an Earth satellite map. Both use the selected UTC moment. The sky chart shows stars, constellations, the Sun, Moon, planets, optional deep-sky objects and predicted satellites when their datasets are installed.'),
+  ('Find a sky object', 'Use Object search for a planet, named star, deep-sky object, satellite name or NORAD catalogue number. Select the result to highlight it in the sky chart and, for satellites, the Earth map with predicted ground track. A planet or star has no satellite ground track.'),
+  ('Timeline and playback', 'Set an exact date and time in your browser timezone, drag the +/-24-hour slider, press Play/Pause, select 1x/10x/60x/300x/3600x speed, or Reset to Now. All astronomical calculations are derived locally from downloaded files and detector coordinates.'),
+  ('View sky at this event', 'On an observation page, View sky at this event opens the maps at that clip’s timestamp. New clips include a snapshot of the detector location; old clips without location explicitly use its current coordinates. Historical satellites cannot be reliably reconstructed from recent data alone. A map match does not automatically identify or delete the recording.'),
+ ]),
+ ('Sky Maps data & updates', [
+  ('Download All after installing', 'Sky Maps → Data & Updates is for administrators. All astronomical data has collapsed dataset sections showing source, last download and status. Expand All astronomical data and choose Download all missing data while the Pi has internet. Large catalogues are not bundled with software updates and remain in /var/lib/uap-detector/sky-map-data.'),
+  ('Different dataset updates', 'Stars, constellations, the NASA/JPL Sun/Moon/planet ephemeris, world coastlines and optional bright deep-sky objects are kept locally until a new version is intentionally downloaded. A core sky chart can run offline after setup. Satellites need fresher orbital data.'),
+  ('Satellite daily download time', 'Expand Satellites and orbital objects, choose a daily hour and minute in the detector’s configured timezone and Save satellite schedule. Moon Cheese checks shortly after that time and uses cached CelesTrak data offline. Provider errors suspend automatic retries until an administrator manually retries after the source cooldown. Older orbital epochs reduce prediction confidence.'),
+  ('No API key or aircraft tracking', 'The listed astronomical download providers do not require the installation owner to configure an API key. Aircraft integration and a dedicated 16:9 OBS browser-streaming page are not included in v1.0.1.2.'),
+ ]),
+ ('Detection zones', [
+  ('Draw monitor and exclusion zones', 'In Detector Settings expand Detection zones and Refresh preview. Choose Monitor/Ignore and Rectangle/Polygon, drag a rectangle or click polygon corners and Finish polygon. Enable the zones and select Save Zones. The preview comes from the detector’s existing cached camera image and does not open a second camera connection.'),
+  ('Zone behaviour and safeguards', 'Zones apply to both general motion and moving sky lights. If any monitor zones are configured only their combined area is eligible; ignore zones then remove areas from it. Save Zones is separate from Camera settings and does not crop the saved MP4, photos or thumbnails. Zones are off by default; avoid excluding the entire image.'),
+ ]),
+ ('Service reassertion', [
+  ('Always-available Repair services', 'Administration → System Health → Software updates has an always-available Repair services button. Enter your administrator password and check the interruption acknowledgement. Moon Cheese backs up and reinstalls official Moon Cheese systemd unit files even if matching, reloads systemd, re-enables mandatory Moon Cheese services and restarts detector/dashboard. Active recordings can be interrupted; optional Cloudflare/DDNS enablement is preserved.'),
+  ('Diagnose competing software', 'Repair services does not kill, disable or reconfigure other software. If another program owns the camera or required listening port, Moon Cheese may still fail to start. Check system health and systemd logs; a healthy unit file is not proof that the camera is available. CLI read-only check: sudo python3 /opt/uap-detector/uap/service_repair.py --check.'),
+ ]),
+])

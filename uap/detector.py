@@ -26,6 +26,7 @@ from scheduling import detection_window
 from camera_profiles import selected_profile, effective_slot, camera_controls
 from draft_preview import pending_request, PENDING, write_result, image_path, expire_old_files
 from photography import pending as pending_photo, state as photo_state, capture_still
+from detection_zones import PATH as DETECTION_ZONES_PATH, read as read_detection_zones, mask as build_detection_mask
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 LOG = logging.getLogger('detector')
@@ -201,7 +202,8 @@ def run_camera(settings):
                                  image_top_bearing=int(settings.get('image_top_bearing', 0)),
                                  camera_elevation=int(settings.get('camera_elevation', 90)),
                                  camera_rotated=int(bool(settings.get('rotate_180', False))),
-                                 camera_profile=selected_slot)
+                                 camera_profile=selected_slot,
+                                 event_latitude=settings.get('latitude'),event_longitude=settings.get('longitude'))
             if interrupted or storm_stop or scheduled:
                 with connection() as db:
                     note = ('Recording ended for a scheduled observation session.' if scheduled else
@@ -222,6 +224,8 @@ def run_camera(settings):
         streaming = True
         write_status('running', 'Camera connected; looking for motion')
         LOG.info('Camera/encoder started at %s fps, %s resolution, %s profile, pre-roll %.1fs', fps, resolution, profile, pre)
+        detection_mask=None
+        last_zone_version=-1
         while not STOP:
             # The recorder owns the only camera. Scheduled observations claim it
             # atomically, finalise any active MP4, and restore detection on return.
@@ -338,7 +342,17 @@ def run_camera(settings):
                     state, message = ('paused' if settings.get('detection_paused') else 'scheduled'), schedule_reason
                 write_status(state, message)
                 last_heartbeat = now
-            gray = cv2.GaussianBlur(latest_frame, (5, 5), 0)
+            # Zones mask BOTH trigger paths, not the video or cached camera previews.
+            # Reload on save without stopping the camera; reset historical tracking
+            # when a mask changes so previous unmasked frames cannot cause triggers.
+            zone_version=DETECTION_ZONES_PATH.stat().st_mtime_ns if DETECTION_ZONES_PATH.exists() else 0
+            if zone_version!=last_zone_version or detection_mask is None:
+                detection_mask=build_detection_mask(w,h,read_detection_zones())
+                last_zone_version=zone_version
+                previous=None
+                if sky_tracker is not None:sky_tracker.clear()
+            analysis_frame=cv2.bitwise_and(latest_frame,latest_frame,mask=detection_mask)
+            gray = cv2.bitwise_and(cv2.GaussianBlur(analysis_frame, (5, 5), 0),detection_mask)
             if now < suppress_detection_until:
                 previous = None
             # The guard is evaluated while a file is actively open; one long
@@ -368,7 +382,7 @@ def run_camera(settings):
                     general_score = int(cv2.countNonZero(mask))
                     general_detected = general_score >= int(settings.get('min_changed_pixels', 65))
                 if sky_tracker is not None:
-                    sky_detected, sky_score = sky_tracker.feed(latest_frame)
+                    sky_detected, sky_score = sky_tracker.feed(analysis_frame)
                 moving = (record_allowed and not low_disk and not storm.cooling(now) and
                           detection_decision(profile, general_detected, sky_detected))
                 score = max(general_score, sky_score)
@@ -430,7 +444,8 @@ def run_camera(settings):
                                  image_top_bearing=int(settings.get('image_top_bearing', 0)),
                                  camera_elevation=int(settings.get('camera_elevation', 90)),
                                  camera_rotated=int(bool(settings.get('rotate_180', False))),
-                                 camera_profile=selected_slot)
+                                 camera_profile=selected_slot,
+                                 event_latitude=settings.get('latitude'),event_longitude=settings.get('longitude'))
             else:
                 camera.stop_recording()
         if not camera_closed:

@@ -139,7 +139,9 @@ def _busy():
                     return True
     try:
         state=json.loads((DATA/'status.json').read_text()).get('state','').lower()
-        return state in ('recording','capturing','rendering','archiving','finalising')
+        if state in ('recording','capturing','rendering','archiving','finalising','photography','job-starting'):return True
+        if state=='running' and 'recording current event' in str(json.loads((DATA/'status.json').read_text()).get('message','')).lower():return True
+        return False
     except (OSError,ValueError):return False
 
 
@@ -200,10 +202,13 @@ def process():
                 raise ValueError('Service repair request does not match the installed version.')
             from service_repair import inspect as inspect_services, apply as restore_services
             _write(STATUS,dict(state,state='working',message='Inspecting official Moon Cheese service definitions.'))
+            if _busy():
+                raise ValueError('An active camera recording or scheduled job must finish before Service Repair.')
+            # A full service reset is requested explicitly with an administrator
+            # password and interruption acknowledgement in the dashboard.
             current=inspect_services()
-            message=restore_services(current)
-            # Do not include local backup paths in normal dashboard results.
-            message='Moon Cheese service definitions checked and restored where needed. Backups retained; running services were not restarted.'
+            message=restore_services(current,force=True,reassert=True)
+            message='Moon Cheese service definitions restored, systemd reloaded and core services restarted. Mandatory owned units re-enabled; optional units preserved. Check System Health for camera status.'
         else:
             if action not in ('update','repair') or not isinstance(version,str):
                 raise ValueError('Unexpected software maintenance request.')

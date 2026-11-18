@@ -95,7 +95,9 @@ def ensure_db():
             ('image_top_bearing', 'INTEGER'),
             ('camera_elevation', 'INTEGER'),
             ('camera_rotated', 'INTEGER'),
-            ('camera_profile', 'TEXT')):
+            ('camera_profile', 'TEXT'),
+            ('event_latitude', 'REAL'),
+            ('event_longitude', 'REAL')):
             if field not in {r[1] for r in db.execute('PRAGMA table_info(events)')}:
                 db.execute(f'ALTER TABLE events ADD COLUMN {field} {type_and_default}')
         db.execute('''CREATE TABLE IF NOT EXISTS users (
@@ -114,12 +116,12 @@ def ensure_db():
                     raise
 
 
-def add_event(kind, video=None, thumbnail=None, score=0, demo=False, trigger_source='', image_top_bearing=None, camera_elevation=None, camera_rotated=None, camera_profile=None):
+def add_event(kind, video=None, thumbnail=None, score=0, demo=False, trigger_source='', image_top_bearing=None, camera_elevation=None, camera_rotated=None, camera_profile=None, event_latitude=None, event_longitude=None):
     with connection() as conn:
         cursor = conn.execute(
-            'INSERT INTO events(time_utc,kind,status,video,thumbnail,score,demo,trigger_source,image_top_bearing,camera_elevation,camera_rotated,camera_profile) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+            'INSERT INTO events(time_utc,kind,status,video,thumbnail,score,demo,trigger_source,image_top_bearing,camera_elevation,camera_rotated,camera_profile,event_latitude,event_longitude) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
             (now_iso(), kind, 'new', video, thumbnail, float(score), int(demo), trigger_source,
-             image_top_bearing, camera_elevation, camera_rotated, camera_profile))
+             image_top_bearing, camera_elevation, camera_rotated, camera_profile, event_latitude, event_longitude))
         return cursor.lastrowid
 
 

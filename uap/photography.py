@@ -128,6 +128,10 @@ def capture_still(job, rotate180=False):
     p=validate(job['params'])
     outfile=output_path(token,p['format'])
     cam=None
+    started=time.time()
+    stage_at=started
+    timings={}
+    success_payload=None
     try:
         # Avoid worsening a nearly-full card with a large still capture.
         minimum=1024**3 if p['format']=='png' else 512*1024**2
@@ -162,6 +166,8 @@ def capture_still(job, rotate180=False):
             transform=Transform(hflip=bool(rotate180),vflip=bool(rotate180)),
             controls=knobs))
         cam.start()
+        timings['preparing_seconds']=round(time.time()-stage_at,3)
+        stage_at=time.time()
         # Status begins after camera start/configuration, not while queued or switching.
         # Picamera2 captures asynchronously to the status reader; this duration is
         # an estimate, not proof that sensor exposure started at this exact instant.
@@ -174,14 +180,18 @@ def capture_still(job, rotate180=False):
         # Starting the still stream with manual controls allows capture_file
         # to wait for a full exposure. No second camera owner is created.
         cam.capture_file(str(outfile))
-        state(token,'saving','Saving photograph')
+        timings['exposure_capture_seconds']=round(time.time()-stage_at,3)
+        stage_at=time.time()
+        state(token,'saving','Finalising photograph',timings=timings,elapsed_seconds=round(time.time()-started,2))
         if not outfile.is_file() or outfile.stat().st_size==0:
             raise RuntimeError('Camera did not save the photograph')
-        state(token,'done','Photograph saved',format=p['format'],width=int(native[0]),height=int(native[1]),
-              bytes=outfile.stat().st_size,created_utc=datetime.now(timezone.utc).isoformat())
+        timings['saving_seconds']=round(time.time()-stage_at,3)
+        state(token,'restoring','Restoring camera monitoring',timings=timings,elapsed_seconds=round(time.time()-started,2))
+        success_payload=dict(format=p['format'],width=int(native[0]),height=int(native[1]),
+                             bytes=outfile.stat().st_size,created_utc=datetime.now(timezone.utc).isoformat())
     except Exception as exc:
         outfile.unlink(missing_ok=True)
-        state(token,'error',str(exc))
+        state(token,'error',str(exc),timings=timings,elapsed_seconds=round(time.time()-started,2))
     finally:
         if cam is not None:
             try: cam.stop()
@@ -189,3 +199,7 @@ def capture_still(job, rotate180=False):
             try: cam.close()
             except Exception: pass
         QUEUE.unlink(missing_ok=True)
+        if success_payload is not None:
+            timings['total_seconds']=round(time.time()-started,2)
+            state(token,'done','Photograph saved; camera released for monitoring restart',
+                  timings=timings,elapsed_seconds=timings['total_seconds'],**success_payload)

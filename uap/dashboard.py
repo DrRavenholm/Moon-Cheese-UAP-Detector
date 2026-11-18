@@ -282,6 +282,17 @@ input,select,textarea{background:var(--theme-field);border-color:var(--edge);col
 .photo-progress{border:1px solid var(--edge);border-radius:9px;padding:12px;margin:10px 0;background:var(--theme-dropdown)}
 .photo-progress[hidden]{display:none!important}.photo-progress .between{font-size:14px}.photo-progress strong{font-variant-numeric:tabular-nums;font-size:20px}
 .photo-progress progress{width:100%;height:12px;accent-color:var(--cyan);margin:9px 0 2px}
+/* Sky Maps and detection zones */
+.sky-map-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.sky-map-canvas{display:block;width:100%;aspect-ratio:1.45;background:#0c1b2b;border-radius:9px}
+.sky-search-results{position:relative;max-height:220px;overflow-y:auto;display:grid;gap:3px}
+.sky-search-results button{display:block;width:100%;text-align:left;background:var(--theme-control);color:var(--text)}
+.sky-layers{position:relative;min-width:175px;border:1px solid var(--edge);border-radius:8px;padding:10px;background:var(--theme-control)}
+.sky-layers>summary{cursor:pointer}.sky-layers>div{padding-top:8px}.sky-layers .checkline{margin:4px 0}
+.zones-preview{width:100%;background:#071421;border:1px solid var(--edge);border-radius:7px;overflow:hidden}
+.zones-preview canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+@media(max-width:900px){.sky-map-grid{grid-template-columns:1fr}}
+
 </style></head><body><main class="shell"><header class="site-header">
   <div class="header-top">
     <div><div class="logo"><img src="{{url_for('moon_icon',name='moon-cheese-48.png')}}" width="26" height="26" style="vertical-align:middle;border-radius:6px;margin-right:7px" alt="">MOON CHEESE <span style="color:var(--cyan)">/ {{ site_title }}</span></div><div class="sub">Sky monitoring · Observation system</div></div>
@@ -299,13 +310,14 @@ input,select,textarea{background:var(--theme-field);border-color:var(--edge);col
     {% if user %}
       <a class="button nav-bell" href="{{ url_for('notices_page') }}" aria-label="Notifications: {{ unread_notices }} unread" title="Notifications"><span aria-hidden="true">🔔</span>{% if unread_notices %} <span class="nav-count">{{ unread_notices }}</span>{% endif %}</a>
       <details class="nav-menu nav-account" data-nav-menu><summary class="button nav-link">Account ▾</summary><div class="nav-dropdown"><a href="{{ url_for('account') }}">My account</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
-      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a>{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
+      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a><a href="{{url_for('sky_maps')}}">Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Sky Map Data &amp; Updates</a>{% endif %}{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
     {% endif %}
     </div>
   </div>
   {% if user %}<nav class="site-nav" aria-label="Main navigation">
     <a class="button nav-link nav-dashboard" href="{{ url_for('home') }}">▦ Dashboard</a>
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">◉ Observations ▾</summary><div class="nav-dropdown">{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a>{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}</div></details>
+    <details class="nav-menu" data-nav-menu><summary class="button nav-link">☾ Sky Maps ▾</summary><div class="nav-dropdown"><a href="{{url_for('sky_maps')}}">Explore Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Data &amp; Updates</a>{% endif %}</div></details>
     {% if admin %}<details class="nav-menu" data-nav-menu><summary class="button nav-link">⚙ Administration ▾</summary><div class="nav-dropdown"><a href="{{ url_for('settings') }}">Camera &amp; Detector Settings</a><a href="{{ url_for('users') }}">Users &amp; Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a></div></details>{% endif %}
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">▤ Information ▾</summary><div class="nav-dropdown"><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a></div></details>
   </nav>{% endif %}
@@ -381,7 +393,7 @@ HELP_CHAPTER_BY_ENDPOINT = {
     'storage_page':'Storage Management', 'job_storage':'Storage Management', 'system_admin':'System Administration',
     'users':'Accounts and access', 'edit_user':'Accounts and access', 'account':'Accounts and access',
     'public_page':'Public observation pages', 'public_job_detail':'Public observation pages',
-    'history':'Version history', 'about_moon_cheese':'About Moon Cheese', 'network_action':'System Administration', 'network_confirm':'System Administration',
+    'sky_maps':'Sky Maps', 'sky_maps_data':'Sky Maps', 'history':'Version history', 'about_moon_cheese':'About Moon Cheese', 'network_action':'System Administration', 'network_confirm':'System Administration',
 }
 
 
@@ -619,6 +631,7 @@ def event(event_id):
     analysis_fps, fps_estimated = get_event_fps(event_id) if e['video'] else (0, True)
     return render_page('''<p><a href="{{ url_for('home') }}">← Back to Dashboard</a></p><h1>{{ e.kind }}</h1><p class="muted">Event #{{ e.id }} · Trigger: {{ source_labels.get(e.trigger_source or '', 'Not recorded') }} {% if e.pinned %}<span class="pin">★ Pinned — protected from cleanup</span>{% endif %}</p>
     {% if e.camera_profile is not none %}<p class="muted">Camera profile: {{ e.camera_profile|replace('custom1','Custom 1')|replace('custom2','Custom 2')|capitalize }} · Image top: {{ e.image_top_bearing }}° · Camera elevation: {{ e.camera_elevation }}°{% if e.camera_rotated %} · Rotated 180°{% endif %} <span class="note">(Manual orientation estimate)</span></p>{% endif %}
+    <p><a class="button" href="{{url_for('sky_maps',event=e.id)}}">☾ View sky at this event</a> <span class="note">Uses saved event time and the recorded coordinates when available. Historical satellite accuracy depends on the available orbital elements.</span></p>
     {% if e.demo %}<p class="error">DEMO EVENT · not recorded by a camera.</p>{% endif %}
     <div class="event-detail-cols"><div class="panel"><h2>Video investigation</h2>
     {% if not e.video %}<p class="muted">No video recording is available for this event.</p>{% endif %}
@@ -1465,6 +1478,21 @@ def settings():
       <p class="note">Coordinates can reveal the exact installation location. Both sharing options are off by default, including when upgrading an existing installation.</p>
       <p class="note">The still image can reveal people and private surroundings. Test outdoors first. Keep any public hostname separated and access-controlled appropriately by your reverse proxy. Public video delivery may have additional CDN restrictions.</p>
       {% if cfg.public_enabled %}<a href="{{ url_for('public_page') }}">Open the public page</a>{% else %}<p class="note">Save settings with this option enabled before the public page can be opened.</p>{% endif %}</div></details>
+      <details class="panel setting-section"><summary>Detection zones — monitored and excluded areas</summary><div class="setting-content" id="zones-editor" data-csrf="{{csrf}}">
+        <p class="note">Draw rectangles or polygons directly over the latest cached camera preview. Green areas allow detections; red areas ignore triggers. The actual recordings stay full-frame and unchanged. Detection zones apply to both General Motion and Moving Sky Lights.</p>
+        <label class="checkline"><input id="zones-enabled" type="checkbox"> Enable custom detection zones (disabled by default)</label>
+        <div class="row" style="gap:8px;align-items:end;flex-wrap:wrap">
+          <div><label for="zones-type">Zone purpose</label><select id="zones-type"><option value="exclude">Ignore motion (red)</option><option value="include">Monitor only here (green)</option></select></div>
+          <div><label for="zones-tool">Drawing tool</label><select id="zones-tool"><option value="rectangle">Rectangle · drag</option><option value="polygon">Polygon · click corners</option></select></div>
+          <button type="button" id="zones-complete">Finish polygon</button><button type="button" id="zones-undo">Undo</button>
+          <button type="button" id="zones-clear">Clear zones</button><button type="button" id="zones-refresh">Refresh preview</button>
+        </div>
+        <div class="zones-preview"><canvas id="zones-canvas" width="960" height="540" aria-label="Camera image with coloured detection zones"></canvas></div>
+        <p class="note" id="zones-status" role="status">Loading saved zones and camera preview…</p>
+        <p class="note">Detection zones have their own Save button. Normal Detector Settings Save does not overwrite them. The preview is a still from the active camera, not another camera connection.</p>
+        <button type="button" id="zones-save">Save detection zones</button>
+        <script src="{{url_for('detection_zones_js')}}" defer></script>
+      </div></details>
       <details class="panel setting-section"><summary>Event-storm protection</summary><div class="setting-content">
       <p class="note">Prevents a sunrise, moving clouds or branches from producing hours of repetitive recordings. The active MP4 is saved, a cooling period begins, then recording resumes automatically. Previews continue during cooldown.</p>
       <label class="checkline"><input type="checkbox" name="storm_enabled" {% if cfg.storm_enabled %}checked{% endif %}> Enable event-storm protection (recommended)</label>
@@ -2516,12 +2544,13 @@ def system_page():
           <button name="action" value="check" type="submit">Check for updates</button>
           <button name="action" value="update" type="submit" {% if not (software.available and software.has_assets) %}disabled title="No installable newer release in the selected channel"{% endif %}>Update now</button>
           <button name="action" value="repair" type="submit" {% if not software.repair_ready %}disabled title="Current version has no verified GitHub release"{% endif %}>Repair current version</button>
-          <button name="action" value="services" type="submit" {% if not service_drift or service_warning %}disabled{% endif %} title="Back up and restore modified or missing Moon Cheese-owned service files; no service restarts">Repair services</button>
+          <button name="action" value="services" type="submit" title="Reinstall official Moon Cheese unit files, re-enable required services and restart the dashboard and detector">Repair services</button>
         </div>
+      <label class="checkline"><input type="checkbox" name="service_ack" value="YES"> I understand that Repair services will interrupt camera monitoring and restart Moon Cheese dashboard and detector services.</label>
       </form>
       <details class="service-inspection"><summary>Service definitions: {% if service_error %}inspection unavailable{% elif service_warning %}manual inspection required{% elif service_drift %}{{service_drift|length}} difference(s) detected{% else %}matching official files{% endif %}</summary>
         {% if service_error %}<p class="note">{{service_error}}</p>{% endif %}
-        <p class="note">Repair services requires your administrator password. It restores only missing or changed Moon Cheese systemd unit files, backs them up first, reloads systemd, and never restarts a running camera or another application. Optional unused Cloudflare units are not treated as faults.</p>
+        <p class="note">Repair services requires your administrator password. It reinstalls Moon Cheese-owned service files even if they match, backs up existing files, reloads systemd, re-enables required Moon Cheese services and restarts its detector and dashboard. Monitoring may be interrupted; optional Cloudflare/DDNS states are preserved. It never disables or kills third-party software.</p>
         {% if service_drift %}<ul>{% for name, state in service_drift.items() %}<li><code>{{name}}</code> — {{state}}</li>{% endfor %}</ul>{% endif %}
         {% if service_warning %}<p class="note">Symbolic links or unavailable service templates must be checked manually before repair.</p>{% endif %}
       </details>
@@ -2538,7 +2567,7 @@ def system_page():
                        service_drift=service_drift, service_warning=service_warning, service_error=service_error,
                        software_error={'missing':'Enter your current administrator password for the requested maintenance action.',
                                        'incorrect':'Incorrect administrator password. No maintenance action was started.',
-                                       'services':'Service repair is unavailable or not needed; check the service definitions below.'}.get(request.args.get('software_error', ''), ''))
+                                       'services':'Service repair could not start. Check the maintenance message below.', 'ack':'Confirm the monitoring interruption before repairing services.'}.get(request.args.get('software_error', ''), ''))
 
 
 @app.route('/system/software/action',methods=['POST'])
@@ -2554,6 +2583,8 @@ def software_action():
             return redirect(url_for('system_page',software_error='missing')+'#software-updates',code=303)
         if not verify_current_admin_password(password):
             return redirect(url_for('system_page',software_error='incorrect')+'#software-updates',code=303)
+        if action=='services' and request.form.get('service_ack')!='YES':
+            return redirect(url_for('system_page',software_error='ack')+'#software-updates',code=303)
         try:
             if action=='services':
                 from software_updates import enqueue_service_repair
@@ -2888,6 +2919,123 @@ ABOUT_MOON_CHEESE = '''<h1>ⓘ &nbsp;About Moon Cheese</h1>
 @app.route('/healthz')
 def healthz():
     return {'web': 'ok'}
+
+
+
+# Sky Maps routes: all astronomical calculation and download logic is isolated
+# from the camera owner. Dataset management is administrator-only.
+from sky_map_pages import SKY_MAPS, SKY_DATA
+
+@app.route('/sky-maps')
+def sky_maps():
+    if not logged_in():return redirect(url_for('login'))
+    from sky_map_data import dataset_status
+    from sky_map_engine import coordinates
+    try:lat,lon=coordinates();missing=False
+    except ValueError:lat,lon=0,0;missing=True
+    event_time=''
+    event_location_missing=False
+    if request.args.get('event'):
+        try:
+            with connection() as db:
+                row=db.execute('SELECT time_utc,event_latitude,event_longitude FROM events WHERE id=?',(int(request.args['event']),)).fetchone()
+            if row:
+                event_time=row['time_utc']
+                if row['event_latitude'] is not None and row['event_longitude'] is not None:
+                    lat,lon=float(row['event_latitude']),float(row['event_longitude'])
+                    missing=False
+                else:event_location_missing=True
+        except (ValueError,TypeError,sqlite3.Error):pass
+    return render_page(SKY_MAPS,title='Sky Maps',lat=lat,lon=lon,
+                       event_time=event_time,event_id=request.args.get('event',''),event_location_missing=event_location_missing,missing_location=missing,
+                       installed=any(x['installed'] for x in dataset_status().values()))
+
+@app.route('/assets/sky-maps.js')
+def sky_maps_js():
+    if not logged_in():abort(403)
+    return send_file(Path(__file__).with_name('sky_maps.js'),mimetype='application/javascript',max_age=3600)
+
+@app.route('/sky-maps/catalogue')
+def sky_maps_catalogue():
+    if not logged_in():abort(403)
+    from sky_map_engine import catalogue
+    return jsonify(catalogue())
+
+@app.route('/sky-maps/search')
+def sky_maps_search():
+    if not logged_in():abort(403)
+    from sky_map_engine import search
+    return jsonify(search(request.args.get('q','')[:75]))
+
+@app.route('/sky-maps/positions')
+def sky_maps_positions():
+    if not logged_in():abort(403)
+    from sky_map_engine import positions,when
+    try:
+        dt=when(request.args.get('at',''))
+        selected=request.args.get('selected','')[:100]
+        if selected and not re.fullmatch(r'(?:sat:[0-9]{1,8}|planet:[A-Za-z]+|star:[\w .+/-]{1,60}|deep_sky:[\w .+/-]{1,60})',selected):
+            raise ValueError('Invalid sky object selection.')
+        event_id=request.args.get('event','')
+        if event_id:
+            with connection() as db:
+                row=db.execute('SELECT event_latitude,event_longitude FROM events WHERE id=?',(int(event_id),)).fetchone()
+            if row and row['event_latitude'] is not None and row['event_longitude'] is not None:
+                return jsonify(positions(dt,selected,lat=float(row['event_latitude']),lon=float(row['event_longitude'])))
+        return jsonify(positions(dt,selected))
+    except ValueError as exc:return jsonify(error=str(exc)),400
+    except Exception:
+        app.logger.exception('Sky Map position calculation failed')
+        return jsonify(error='Astronomical positions could not be calculated. Check installed data and Skyfield.'),503
+
+@app.route('/sky-maps/data')
+def sky_maps_data():
+    if not is_admin():abort(403)
+    from sky_map_data import dataset_status,prefs,next_satellite_check
+    statuses=dataset_status()
+    return render_page(SKY_DATA,title='Sky Maps Data',statuses=statuses,
+        count=sum(1 for x in statuses.values() if x['installed']),
+        total_bytes=sum(x['bytes'] for x in statuses.values()),
+        preferences=prefs(),next_satellite=next_satellite_check(),timezone=read_config().get('schedule_timezone','UTC'),
+        queued=request.args.get('queued',''),saved=request.args.get('saved')=='1',
+        error={'invalid':'Invalid request, schedule or data download already pending.'}.get(request.args.get('error',''),''))
+
+@app.route('/sky-maps/data/download',methods=['POST'])
+def sky_maps_data_action():
+    if not is_admin():abort(403)
+    check_csrf()
+    from sky_map_data import queue_download
+    try:
+        kind=request.form.get('kind','')
+        queue_download(kind)
+    except (ValueError,OSError):return redirect(url_for('sky_maps_data',error='invalid'),code=303)
+    return redirect(url_for('sky_maps_data',queued=kind),code=303)
+
+@app.route('/sky-maps/data/schedule',methods=['POST'])
+def sky_maps_schedule():
+    if not is_admin():abort(403)
+    check_csrf()
+    from sky_map_data import save_prefs
+    try:save_prefs(int(request.form.get('hour','')),int(request.form.get('minute','')),request.form.get('auto')=='on')
+    except (ValueError,OSError):return redirect(url_for('sky_maps_data',error='invalid'),code=303)
+    return redirect(url_for('sky_maps_data',saved=1),code=303)
+
+@app.route('/settings/detection-zones',methods=['GET','POST'])
+def detection_zones_api():
+    if not is_admin():abort(403)
+    from detection_zones import read,write
+    if request.method=='GET':return jsonify(read())
+    if not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session.get('csrf','_')):abort(403)
+    try:
+        if not request.is_json or request.content_length is None or request.content_length>16000:
+            raise ValueError('Invalid detection zone request size.')
+        return jsonify(write(request.get_json()))
+    except (ValueError,TypeError,OSError) as exc:return jsonify(error=str(exc)[:180]),400
+
+@app.route('/assets/detection-zones.js')
+def detection_zones_js():
+    if not is_admin():abort(403)
+    return send_file(Path(__file__).with_name('detection_zones.js'),mimetype='application/javascript',max_age=3600)
 
 
 if __name__ == '__main__':

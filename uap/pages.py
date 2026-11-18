@@ -16,6 +16,18 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.1.2','title':'Sky Maps, Detection Zones and Recovery Improvements','date':'17 Nov 2026',
+   'summary':'Add offline-first linked Sky Maps and astronomical downloads, detection-zone editing, active Service Repair and persistent Photography progress.',
+   'details':[
+     'Added Sky Maps in the main navigation with a linked all-sky chart and world satellite map, layer controls, searchable celestial objects, historical timestamps and adjustable timeline playback.',
+     'Added a separate administrator Data & Updates page: expandable datasets, Download All, per-dataset status and download history, and a configurable local daily satellite update time.',
+     'Data is fetched from public star/constellation catalogues, JPL planetary ephemerides, CelesTrak and Natural Earth after installation, without user API keys. Static files are cached outside the app and remain usable offline.',
+     'Added an event-to-sky-map shortcut. New event recordings retain latitude/longitude; older events without location use the current detector coordinates with an explicit caveat.',
+     'Added include/exclude camera-preview detection zones, supporting rectangles and polygons. Zones filter general-motion and moving-light triggers only; the default is full-frame and recordings remain unaltered.',
+     'Changed Repair services to an administrator-password-protected full reassertion of official Moon Cheese services with explicit confirmation and backups. It restarts Moon Cheese detector/dashboard, not third-party applications.',
+     'Made Photography status persist through camera preparation, exposure estimate, saving and restoration, with stage-duration diagnostics.',
+     'Added an independent Sky Data worker and Debian Skyfield dependency while preserving recordings, user accounts, networking settings, live camera ownership and installed datasets.'
+   ]},
   {'version':'1.0.1.1','title':'Theme Consistency, Service Repair and Photography Countdown','date':'14 Nov 2026',
    'summary':'Fix theme flashing and remaining blue panels, add a compact colour picker, expose safe service repair and introduce Photography exposure progress.',
    'details':[
