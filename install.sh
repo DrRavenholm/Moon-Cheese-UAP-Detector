@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.1.3: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1.4: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.1.3'
+VERSION='1.0.1.4'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
@@ -20,7 +20,8 @@ if [[ -f SHA256SUMS ]]; then
 fi
 for file in dashboard.py detector.py common.py observation_jobs.py photography.py camera_profiles.py \
             draft_preview.py hardware.py scheduling.py delivery.py notifications.py \
-            network_setup.py network_worker.py network_ui.py sky_map_engine.py sky_map_data.py detection_zones.py; do
+            network_setup.py network_worker.py network_ui.py sky_map_engine.py sky_map_data.py detection_zones.py \
+            detection_methods.py advanced_detection.py detector_diagnostics.py; do
   [[ -f "uap/$file" ]] || fail "Incomplete archive: missing uap/$file"
 done
 for file in uap-dashboard.service uap-detector.service uap-notifications.service \
@@ -33,8 +34,9 @@ done
 for file in npm/compose.yaml npm/provision_npm.py; do
   [[ -f "$file" ]] || fail "Incomplete archive: missing $file"
 done
-for file in uap/network_ui.js uap/network_confirm.js uap/camera_reset.js uap/investigator.js; do [[ -f "$file" ]] || fail "Incomplete archive: missing $file"; done
-for file in uap/*.py; do python3 -m py_compile "$file"; done
+for file in uap/network_ui.js uap/network_confirm.js uap/camera_reset.js uap/investigator.js \
+            uap/detection_settings.js uap/detection_zones.js; do [[ -f "$file" ]] || fail "Incomplete archive: missing $file"; done
+python3 -m compileall -q uap || fail 'Package Python source does not compile.'
 if command -v node >/dev/null 2>&1; then
   for file in uap/*.js; do node --check "$file" >/dev/null; done
 fi

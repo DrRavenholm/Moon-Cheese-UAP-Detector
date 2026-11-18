@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.3 maintenance release uses the same one-command stable installation process.
+This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.4 maintenance release uses the same one-command stable installation process.
 
 ## Before installation
 
@@ -91,3 +91,7 @@ The star/constellation, Sun/Moon/planet, world map, and optional deep-sky files 
 ## Sky Maps v1.0.1.3 acceptance check
 
 After uploading and installing the matching v1.0.1.3 GitHub release, verify Sky Maps search for ISS, Polaris, Mars, a deep-sky object and a NORAD number. Reset to Now and confirm the solar location is below the Scottish horizon at midnight. Compare the Sun's current location to a trusted astronomical chart and the day/night terminator to local time. Toggle the star-brightness slider, separate constellation names, day/night and twilight controls. The Earth map shows a sampled global set, not every satellite. The Raspberry Pi-confirmed Photography countdown and event links must continue working.
+
+## Detection Reliability v1.0.1.4 acceptance
+
+After installing the matching release and confirming normal camera preview/photography, visit Detector Settings → Detection Methods & Sensitivity. The previous General, Moving Sky Lights or Combined selection must be preserved as separate checkboxes. New MOG2/Transient methods must be unchecked unless you explicitly selected them. Verify per-engine resets do not alter camera exposure, gain or saved detection zones. Test a stable light moved slowly across the view, a brief bright streak under controlled conditions, and an actual night-sky scene while monitoring live diagnostics, false positives and CPU load. Custom Detection Zones now support red-only exclusion, explicit Finish shape and Trace Horizon; verify the saved masks do not crop full-resolution video. New dew-heater GPIO power control is not enabled pending verified wiring.

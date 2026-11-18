@@ -1,3 +1,15 @@
+## v1.0.1.4 — Detection Reliability, Settings and Zone Editor
+**Date:** 18 November 2026
+
+- Moved General Motion thresholds from Camera and Recording into Detection Methods & Sensitivity. Replaced the three-choice detection dropdown with independent checkboxes for General Motion, Moving Sky Lights, MOG2 and experimental Transient/Streak. Existing selections and custom thresholds migrate without change; new engines remain off until an administrator enables them.
+- Added balanced, faint and fast detection presets and per-engine/all-detector Reset defaults that do not change camera profile, frame rate or detection zones.
+- Removed redundant frame confirmation for a track or transient already identified by its detector; moving sky lights now measure cumulative travel across frames instead of demanding movement every frame.
+- Added live read-only administrator detector diagnostics: black/white saturation, signal brightness, per-method scores and candidate counts, recording/cooldown/schedule state and analysis speed.
+- Added MOG2 adaptive background subtraction and experimental single-frame transient/streak analysis within the existing camera process. All active methods share one recorder and use saved detection zones.
+- Rebuilt detection-zone drawing: single-click and Finish shape, no double-click closure, no silent point truncation, Trace Horizon, freehand, editable handles, Undo/Redo and individual-zone removal. Red exclusions alone leave all uncovered sky monitored.
+- Existing camera ownership, recording formats, historical observations, user records, Sky Maps, software repair, networking and Photography remain unchanged. No dew-heater GPIO controller is activated without confirmed PoE HAT/switch hardware.
+- **Validation:** offline tests and browser simulation cannot establish actual night-time detection accuracy; validate CPU load, triggers and false-positive rates on a Raspberry Pi before relying on the new methods.
+
 ## v1.0.1.2 — Sky Maps, Detection Zones and Recovery Corrections
 **Date:** 17 November 2026
 
