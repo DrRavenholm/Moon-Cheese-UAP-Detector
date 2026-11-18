@@ -19,21 +19,51 @@ panel.querySelectorAll('[data-detect-reset]').forEach(b=>b.addEventListener('cli
 }));
 $('detection-reset-all').addEventListener('click',()=>{
  if(!window.confirm('Load DEFAULT detection methods and thresholds? This will not reset camera profiles or detection zones. Save settings to apply.'))return;
- apply(all,defaults);panel.querySelectorAll('[name="detection_methods"]').forEach(b=>b.checked=b.value==='general');
+ apply(all,defaults);const resolution=panel.querySelector('[name="analysis_resolution"]');if(resolution)resolution.value=defaults.analysis_resolution||'320x240';panel.querySelectorAll('[name="detection_methods"]').forEach(b=>b.checked=b.value==='general');
  preset.value='custom';updateMethods();note.textContent='Detection defaults loaded; camera settings and zones unchanged. Save settings to apply.';
 });
 const diag=$('detection-diagnostics'),display=$('detection-live-values');
+const methodLabels={general:'General Motion',sky_lights:'Moving Sky Lights',mog2:'Adaptive Background (MOG2)',transient:'Transient & Streak'};
+const safe=x=>String(x??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function refresh(){if(!diag.open)return;
  try{const r=await fetch('/api/detection-diagnostics',{credentials:'same-origin',cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Unavailable');
- const age=(Date.now()-new Date(d.updated).getTime())/1000;
- const safe=x=>String(x??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- display.innerHTML=`<p><strong>Status:</strong> ${safe(d.reason)} · ${age>15?'<strong>STALE — check detector service</strong>':'Live'} (${Math.max(0,Math.round(age))} seconds ago)</p>
- <p><strong>Image:</strong> mean brightness ${safe(d.brightness_mean)} / 255 · nearly black ${safe(d.nearly_black_percent)}% · nearly white ${safe(d.nearly_white_percent)}% · available zone ${safe(d.active_zone_percent)}%</p>
- <p><strong>Analysis speed:</strong> ${safe(d.analysis_fps)} fps · Recording ${d.recording?'YES':'No'} · Recording permitted ${d.record_allowed?'YES':'No'}</p>
- <p><strong>Enabled:</strong> ${safe((d.methods||[]).join(', '))}</p>
- <p><strong>Candidates:</strong> ${safe(JSON.stringify(d.candidates))}</p>
- <p><strong>Scores:</strong> ${safe(JSON.stringify(d.scores))}</p>
- <p><strong>Since detector restart:</strong> ${safe(JSON.stringify(d.counts||{}))}</p>`;
- }catch(e){display.textContent='Detection diagnostics: '+e.message;}}
-diag.addEventListener('toggle',refresh);setInterval(refresh,5000);
+ const age=Math.max(0,Math.round((Date.now()-new Date(d.updated).getTime())/1000));
+ const counters=d.counts||{},data=d.camera_readings||{};
+ const countersRows=Object.entries(methodLabels).map(([key,label])=>`<tr><td>${label}</td><td>${(d.methods||[]).includes(key)?'Enabled':'Off'}</td><td>${d.candidates?.[key]?'Candidate':'—'}</td><td>${safe(d.scores?.[key]??0)}</td><td>${safe(counters['candidate_'+key]??0)}</td><td>${safe(counters['unconfirmed_'+key]??0)}</td></tr>`).join('');
+ display.innerHTML=`<p><strong>${age>15?'⚠ Stale — check detector':'● Monitoring snapshot'}</strong> · ${safe(d.reason)} · ${age}s ago</p>
+ <div class="job-estimate-grid"><div><div class="sub">Analysis</div><strong>${safe(d.analysis_resolution||'320x240')}</strong></div><div><div class="sub">Frame rate (set / measured)</div><strong>${safe(d.configured_fps)} / ${safe(d.analysis_fps)} fps</strong></div><div><div class="sub">Image brightness</div><strong>${safe(d.brightness_mean)} / 255</strong></div><div><div class="sub">Camera ISO equivalent</div><strong>${safe(data.iso_equivalent||'Not reported')}</strong></div></div>
+ <p class="note">Measured exposure: ${safe(data.exposure_ms)} ms · analogue gain: ${safe(data.analogue_gain)}× · digital gain: ${safe(data.digital_gain)}×. ISO is a software-reported equivalent, not calibrated sensor ISO.</p>
+ <p>Nearly black: ${safe(d.nearly_black_percent)}% · Nearly white: ${safe(d.nearly_white_percent)}% · Detection area: ${safe(d.active_zone_percent)}%</p>
+ <p>Recording ${d.recording?'active':'inactive'} · Recording ${d.record_allowed?'permitted':'not permitted'} · Events started since detector restart: ${safe(counters.events_started||0)} · Candidate frames blocked by schedule/storage/cooldown: ${safe(counters.candidates_blocked||0)}</p>
+ <div class="readable"><table><thead><tr><th>Method</th><th>Enabled</th><th>Now</th><th>Score</th><th>Candidate frames since restart</th><th>Signal frames not confirmed</th></tr></thead><tbody>${countersRows}</tbody></table></div>`;
+ }catch(e){display.textContent='Detection diagnostics unavailable: '+e.message;}
+}
+const historyDay=$('detection-history-day'),historyStatus=$('detection-history-status');
+const historyChart=$('detection-history-chart'),historySummary=$('detection-history-summary'),historyExport=$('detection-history-export');
+const ns='http://www.w3.org/2000/svg';
+function svgElement(tag,attrs,text){const node=document.createElementNS(ns,tag);for(const [name,value] of Object.entries(attrs||{}))node.setAttribute(name,String(value));if(text!==undefined)node.textContent=text;return node;}
+function chart(samples){historyChart.replaceChildren();
+ const buckets=Array.from({length:24},()=>({candidate:0,events:0,brightness:0,count:0,allowed:0}));
+ for(const item of samples){const hour=Number((item.minute_utc||'').substring(11,13));if(!Number.isInteger(hour)||hour<0||hour>23)continue;
+ const b=buckets[hour],delta=item.delta||{};b.count++;b.candidate+=Object.entries(delta).filter(([key])=>key.startsWith('candidate_')).reduce((a,[,value])=>a+Number(value||0),0);b.events+=Number(delta.events_started||0);b.brightness+=Number(item.brightness_mean||0);b.allowed+=item.record_allowed?1:0;}
+ const max=Math.max(1,...buckets.map(x=>x.candidate));
+ historyChart.append(svgElement('line',{x1:28,y1:125,x2:695,y2:125,stroke:'currentColor','stroke-opacity':'.3'}));
+ buckets.forEach((b,i)=>{const x=30+i*27.3;const height=b.candidate/max*92;
+ const rect=svgElement('rect',{x,y:125-height,width:19,height:Math.max(0,height),fill:'var(--cyan, #75dbed)',opacity:b.count?'.9':'.12'});
+ rect.append(svgElement('title',{},`${i.toString().padStart(2,'0')}:00 UTC — ${b.candidate} candidate frames, ${b.events} started events, ${b.count} samples`));historyChart.append(rect);
+ if(b.events)historyChart.append(svgElement('circle',{cx:x+9,cy:Math.max(5,120-height),r:3.6,fill:'#ffc26f'}));
+ if(i%3===0)historyChart.append(svgElement('text',{x:x+7,y:146,fill:'currentColor','font-size':11,'text-anchor':'middle'},`${i.toString().padStart(2,'0')}h`));
+ });
+ const candidates=buckets.reduce((a,x)=>a+x.candidate,0),events=buckets.reduce((a,x)=>a+x.events,0),allowed=buckets.reduce((a,x)=>a+x.allowed,0);
+ historySummary.textContent=`${samples.length} minute summaries · ${candidates} candidate frames · ${events} started events · ${allowed} monitoring-permitted samples. Teal bars = candidates per hour; amber dots = hour with an event. Gaps mean no samples (possible downtime).`;
+}
+async function loadHistory(){if(!diag.open)return;const day=historyDay.value;
+ historyExport.href='/api/detection-history.csv?day='+encodeURIComponent(day);
+ historyStatus.textContent='Loading UTC-day history…';
+ try{const r=await fetch('/api/detection-history?day='+encodeURIComponent(day),{credentials:'same-origin',cache:'no-store'});
+ const data=await r.json();if(!r.ok)throw Error(data.error||'Cannot read history');
+ chart(data.samples||[]);historyStatus.textContent=data.samples?.length?`History loaded for ${day} (UTC)`:'No stored samples for this date. New history begins after this upgrade.';
+ }catch(e){historyChart.replaceChildren();historySummary.textContent='';historyStatus.textContent='Could not load history: '+e.message;}}
+if(historyDay){historyDay.value=new Date().toISOString().slice(0,10);$('detection-history-refresh').addEventListener('click',loadHistory);historyDay.addEventListener('change',loadHistory);}
+diag.addEventListener('toggle',()=>{refresh();if(diag.open)loadHistory();});setInterval(refresh,5000);
 })();

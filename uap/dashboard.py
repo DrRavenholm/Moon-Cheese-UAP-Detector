@@ -324,6 +324,7 @@ input,select,textarea{background:var(--theme-field);border-color:var(--edge);col
   </nav>{% endif %}
   </header>
 <script src="{{ url_for('theme_js') }}" defer></script>
+<script src="{{ url_for('iso_controls_js') }}" defer></script>
 <script src="{{ url_for('navigation_js') }}" defer></script>
 {% if help_anchor and user %}<div class="context-help"><a class="button" href="{{ url_for('help_page') }}#chapter-{{ help_anchor }}" title="Open help for this page" aria-label="Help for {{ title }}">? Help</a></div>{% endif %}
 {{ content|safe }}<div class="foot">Moon Cheese UAP Detector by Dr Ravenholm · <a href="https://transparent-aluminium.net/" target="_blank" rel="noopener noreferrer">Transparent-Aluminium.net</a> · v{{app_version}} · A motion detection is not proof of an unidentified object.</div></main></body></html>'''
@@ -826,7 +827,8 @@ def live_camera():
     <details id="live-advanced"><summary class="button">Advanced photography controls</summary>
       <div class="live-photo-grid" style="margin-top:14px"><label>Exposure mode<select id="photo-mode"><option value="auto">Automatic</option><option value="manual">Manual long exposure</option></select></label>
       <label>Exposure / shutter (milliseconds, max 112000)<input id="photo-exposure" type="number" min="0.1" max="112000" step="0.1" value="1000"></label>
-      <label>Analogue gain (1–16×)<input id="photo-gain" type="number" min="1" max="16" step="0.1" value="4"></label>
+      <div data-iso-unit><label>Analogue gain (1–16×)<input id="photo-gain" type="number" min="1" max="16" step="0.1" value="4"></label>
+      <label>ISO-equivalent shortcut<select data-iso-for="photo-gain"><option value="1">ISO 100</option><option value="2">ISO 200</option><option value="4">ISO 400</option><option value="8">ISO 800</option><option value="16">ISO 1600</option></select></label><p class="note" data-iso-readout></p></div>
       <label>Focus<select id="photo-focus"><option value="infinity">Infinity</option><option value="auto">Autofocus</option></select></label>
       <label>White balance<select id="photo-awb"><option value="auto">Automatic</option><option value="manual">Manual</option></select></label>
       <label>Red gain<input id="photo-red" type="number" min="0.1" max="8" step="0.1" value="1.5"></label>
@@ -837,6 +839,7 @@ def live_camera():
       </div>
     </details>
     <div class="live-controls"><label>Photo format<select id="photo-format"><option value="jpg">JPEG (high quality)</option><option value="png">PNG (larger lossless file)</option></select></label><button id="photo-capture" type="button">Capture full resolution</button></div>
+    <p data-camera-readings class="note" aria-live="off">Loading current camera ISO-equivalent reading…</p>
     <p id="photo-status" class="note" role="status">Camera remains in normal recording mode until Capture is pressed.</p>
     <div id="photo-progress" class="photo-progress" hidden aria-label="Photograph exposure progress"><div class="between"><span id="photo-phase">Exposure in progress</span><strong id="photo-countdown" role="timer">—</strong></div><progress id="photo-exposure-progress" max="100" value="0"></progress><p class="note tight">Approximate shutter countdown; camera timing and saving can take longer.</p></div>
     <div id="photo-download"></div>
@@ -923,6 +926,10 @@ def theme_init_js():
 def theme_js():
     return send_file(Path(__file__).with_name('theme.js'),mimetype='application/javascript')
 
+
+@app.route('/assets/iso-controls.js')
+def iso_controls_js():
+    return send_file(Path(__file__).with_name('iso_controls.js'),mimetype='application/javascript')
 
 @app.route('/assets/navigation.js')
 def navigation_js():
@@ -1270,10 +1277,25 @@ def validated_settings(form):
             'contrast': profile_number('contrast'),
             'saturation': profile_number('saturation'),
         })
+    analysis_resolution = form.get('analysis_resolution', current.get('analysis_resolution','320x240'))
+    if analysis_resolution not in ('320x240','640x360','640x480'):
+        raise ValueError('Choose a supported detection analysis resolution.')
+    video_w,video_h = RESOLUTIONS[resolution]
+    if analysis_resolution != '320x240':
+        analysis_w,analysis_h = (int(v) for v in analysis_resolution.split('x'))
+        if abs(video_w/video_h - analysis_w/analysis_h)>0.01:
+            raise ValueError('High-detail detection resolution must match the recording aspect ratio. Use 640×360 for HD/Full HD or 640×480 for VGA.')
+    preview_quality = form.get('preview_quality', current.get('preview_quality','standard'))
+    if preview_quality not in ('standard','balanced','detailed'):
+        raise ValueError('Choose a valid camera preview quality.')
     fps_value = integer('fps', 5, capture_capabilities()['max_fps'])
-    for slot in SLOTS:
+    # Inactive saved profiles are allowed to contain exposures incompatible with
+    # the current FPS. Check them when selected, not when configuring the camera.
+    relevant_slots = ('day', 'night') if camera_profile_mode == 'solar' else (
+        (camera_profile_mode,) if camera_profile_mode in SLOTS else ())
+    for slot in relevant_slots:
         if not exposure_within_frame(camera_profiles[slot], fps_value):
-            raise ValueError(f'{camera_profiles[slot]["name"]}: manual exposure is too long at {fps_value} fps. Lower exposure or frame rate.')
+            raise ValueError(f'{camera_profiles[slot]["name"]}: manual exposure is too long at {fps_value} fps. Lower exposure or frame rate, or select Automatic exposure.')
     rotate_180 = form.get('rotate_180') == 'on' if 'camera_profile_mode' in form else bool(current.get('rotate_180', False))
     bearing = integer('image_top_bearing', 0, 359) if 'image_top_bearing' in form else int(current.get('image_top_bearing', 0))
     elevation = integer('camera_elevation', 0, 90) if 'camera_elevation' in form else int(current.get('camera_elevation', 90))
@@ -1293,6 +1315,8 @@ def validated_settings(form):
         'detection_paused': read_config().get('detection_paused', False),
         'fps': fps_value,
         'resolution': resolution,
+        'analysis_resolution': analysis_resolution,
+        'preview_quality': preview_quality,
         'detection_profile': detection_profile,
         'detection_methods': detection_methods,
         'detector_preset': detector_preset,
@@ -1372,8 +1396,8 @@ def settings():
     due_size = sum(int(r.get('bytes', 0)) for r in plan)
     return render_page('''<p><a href="{{ url_for('home') }}">← Back to Dashboard</a></p>
     <h1>Detector settings</h1>
-    {% if saved %}<div class="notice" role="status">Settings saved. Camera changes apply automatically after the current recording finishes.</div>{% endif %}
-    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    {% if saved and not error and request.method == 'GET' %}<div class="notice" role="status">Settings saved. Camera changes apply automatically after the current recording finishes.</div>{% endif %}
+    {% if error %}<p class="error" role="alert">Settings were NOT saved: {{ error }}</p>{% endif %}
     <script src="{{ url_for('profile_defaults_js') }}" defer></script>
     <script src="{{ url_for('camera_reset_js') }}" defer></script>
     <script src="{{ url_for('detection_settings_js') }}" defer></script>
@@ -1390,10 +1414,17 @@ def settings():
       <div><label for="camera_fps">Camera frame rate</label><select name="fps" id="camera_fps" required>
       {% for rate in fps_options %}<option value="{{ rate }}" {% if cfg.fps|int == rate %}selected{% endif %}>{{ rate }} fps{% if rate > 30 %} — experimental{% endif %}</option>{% endfor %}
       </select></div>
+      <div><label for="preview_quality">Standard camera-preview quality</label>
+        <select id="preview_quality" name="preview_quality">
+        <option value="standard" {% if cfg.preview_quality == 'standard' %}selected{% endif %}>Standard — 640 px, JPEG 75</option>
+        <option value="balanced" {% if cfg.preview_quality == 'balanced' %}selected{% endif %}>Balanced — 960 px, JPEG 85</option>
+        <option value="detailed" {% if cfg.preview_quality == 'detailed' %}selected{% endif %}>Detailed — 1280 px, JPEG 90 (more Pi/network load)</option>
+        </select></div>
       <div><label>Seconds before motion (1–15)</label><input type="number" name="pre_motion_seconds" min="1" max="15" value="{{ cfg.pre_motion_seconds }}" required></div>
       <div><label>Seconds after motion (1–60)</label><input type="number" name="post_motion_seconds" min="1" max="60" value="{{ cfg.post_motion_seconds }}" required></div>
       <div><label>Maximum clip length (30–3600 sec)</label><input type="number" name="max_clip_seconds" min="30" max="3600" value="{{ cfg.max_clip_seconds }}" required></div>
       </div><p class="note">Detected hardware: {{ capabilities.pi_model }} · camera: {{ capabilities.camera_model }}. Higher frame rates are only offered on detected compatible devices. {% if capabilities.experimental %}Rates above 30 fps are experimental; check real MP4 frame rate and CPU load before leaving the recorder unattended.{% endif %}</p>
+      <p class="note">The preview quality affects cached dashboard and public snapshots, not the original recorded MP4 or sensor ISO. On-demand administrator HD camera snapshots remain separate.</p>
       <p class="note">Higher resolutions use more processing power and disk space. Changes take effect after the current recording has finished. Use Detection Methods &amp; Sensitivity to adjust motion sensitivity; camera and detection settings are separate.</p>
       <div class="row"><button type="button" id="camera-recording-reset" data-defaults='{{ camera_reset_defaults|tojson }}'>Reset to defaults</button><span class="note" id="camera-recording-reset-result" role="status">Resets only Camera and recording. Review the values and press Save settings to apply.</span></div></div></details>
 
@@ -1413,6 +1444,7 @@ def settings():
         {% for key in ['day','night','custom1','custom2'] %}<option value="{{ key }}" {% if active_profile == key %}selected{% endif %}>{{ camera_profiles[key].name }}</option>{% endfor %}</select>
         <button type="button" data-preview-profile-choice>Preview unsaved changes</button></div>
         <img class="preview" id="preview-image" src="{{ url_for('preview') }}" alt="Latest camera image">
+        <p data-camera-readings class="note" aria-live="off">Loading current exposure and ISO-equivalent reading…</p>
         <p class="note" id="preview-note">Choose a profile below and press Test unsaved profile to see your adjustments before saving. This privately tests camera settings, then restores the active profile. Detection briefly pauses while the buffer refills. Normal Refresh shows the currently active camera image.</p>
       </div>
       <label class="checkline"><input type="checkbox" name="rotate_180" {% if cfg.rotate_180 %}checked{% endif %}> Rotate recorded image and preview 180°</label>
@@ -1430,7 +1462,8 @@ def settings():
       <div><label>Profile name</label><input name="cam_{{ key }}_name" value="{{ p.name }}" maxlength="48" required></div>
       <div><label>Exposure control</label><select name="cam_{{ key }}_auto_exposure"><option value="auto" {% if p.auto_exposure %}selected{% endif %}>Automatic exposure and gain</option><option value="manual" {% if not p.auto_exposure %}selected{% endif %}>Manual exposure and gain</option></select></div>
       <div><label>Manual exposure (ms)</label><input type="number" name="cam_{{ key }}_exposure_ms" step="0.1" min="0.1" max="1000" value="{{ p.exposure_ms }}" required></div>
-      <div><label>Manual analogue gain (1–16)</label><input type="number" name="cam_{{ key }}_gain" step="0.1" min="1" max="16" value="{{ p.gain }}" required></div>
+      <div data-iso-unit><label>Manual analogue gain (1–16×)</label><input id="cam_{{ key }}_gain" type="number" name="cam_{{ key }}_gain" step="0.1" min="1" max="16" value="{{ p.gain }}" required>
+      <label>ISO-equivalent shortcut<select data-iso-for="cam_{{ key }}_gain"><option value="1">ISO 100</option><option value="2">ISO 200</option><option value="4">ISO 400</option><option value="8">ISO 800</option><option value="16">ISO 1600</option></select></label><span class="note" data-iso-readout></span></div>
       <div><label>Automatic exposure compensation (-4 to 4)</label><input type="number" name="cam_{{ key }}_ev" step="0.1" min="-4" max="4" value="{{ p.ev }}" required></div>
       <div><label>White balance</label><select name="cam_{{ key }}_awb"><option value="auto" {% if p.awb %}selected{% endif %}>Automatic</option><option value="manual" {% if not p.awb %}selected{% endif %}>Manual red/blue gains</option></select></div>
       <div><label>Red colour gain (0.1–8)</label><input type="number" name="cam_{{ key }}_red_gain" step="0.1" min="0.1" max="8" value="{{ p.red_gain }}" required></div>
@@ -1457,6 +1490,13 @@ def settings():
       <option value="faint" {% if cfg.detector_preset == 'faint' %}selected{% endif %}>Faint Lights — higher sensitivity and more false positives</option>
       <option value="fast" {% if cfg.detector_preset == 'fast' %}selected{% endif %}>Fast Objects — shorter confirmation and enhanced streaks</option></select>
       <p class="note">Choosing a preset loads detection thresholds into the form. Check the values and Save settings to apply. Changing any threshold marks it Custom. Camera exposure, recording durations and detection zones are never altered by presets.</p>
+      <label for="analysis_resolution">Detection analysis resolution (not recording resolution)</label>
+      <select name="analysis_resolution" id="analysis_resolution">
+        <option value="320x240" {% if cfg.analysis_resolution == '320x240' %}selected{% endif %}>320 × 240 — original / lowest CPU</option>
+        <option value="640x360" {% if cfg.analysis_resolution == '640x360' %}selected{% endif %}>640 × 360 — HD and Full HD cameras / higher CPU</option>
+        <option value="640x480" {% if cfg.analysis_resolution == '640x480' %}selected{% endif %}>640 × 480 — VGA cameras / higher CPU</option>
+      </select>
+      <p class="note">High-detail analysis requires the same aspect ratio as the recorded video. Pixel/area and motion thresholds are scaled from the original 320×240 reference, but retest sensitivity on the Pi. Larger frames increase CPU use; defaults remain 320×240 on upgrade.</p>
       <details class="panel setting-section"><summary>General Motion — thresholds</summary><div class="setting-content"><div class="options">
       <div><label>Pixel difference threshold (1–255)</label><input type="number" name="pixel_threshold" min="1" max="255" value="{{ cfg.pixel_threshold }}" required></div>
       <div><label>Changed pixels to trigger (10–10000)</label><input type="number" name="min_changed_pixels" min="10" max="10000" value="{{ cfg.min_changed_pixels }}" required></div></div>
@@ -1468,7 +1508,7 @@ def settings():
       <div><label>Minimum bright area (1–40 pixels)</label><input name="sky_min_area" type="number" min="1" max="40" value="{{ cfg.sky_min_area }}" required></div>
       <div><label>Maximum bright area (10–400 pixels)</label><input name="sky_max_area" type="number" min="10" max="400" value="{{ cfg.sky_max_area }}" required></div>
       <div><label>Total movement (1–15 analysis pixels)</label><input name="sky_min_movement" type="number" min="1" max="15" value="{{ cfg.sky_min_movement }}" required></div></div>
-      <p class="note">Movement is measured over the confirmed track, NOT required on every individual frame. All values are for the 320 × 240 detector image, not the MP4.</p>
+      <p class="note">Movement is measured over the confirmed track, NOT required on every individual frame. Thresholds use the original 320 × 240 reference scale, adjusted for higher analysis resolutions, not the MP4.</p>
       <button type="button" data-detect-reset="sky_lights">Reset Moving Sky Lights defaults</button></div></details>
       <details class="panel setting-section"><summary>Adaptive Background (MOG2) — thresholds</summary><div class="setting-content"><div class="options">
       <div><label>Background variance threshold (8–100)</label><input name="mog2_threshold" type="number" min="8" max="100" value="{{ cfg.mog2_threshold }}" required></div>
@@ -1484,8 +1524,16 @@ def settings():
       <button type="button" data-detect-reset="transient">Reset Transient defaults</button></div></details>
       <div class="row"><button type="button" id="detection-reset-all">Reset all detection settings</button><span class="note" id="detection-reset-result" role="status">Resets detection methods and thresholds only, not camera settings or zones. Save settings to apply.</span></div>
       <details class="panel setting-section" id="detection-diagnostics"><summary>Live Detection Diagnostics — why is nothing being recorded?</summary><div class="setting-content">
-        <p class="note">Diagnostic figures refresh while open. These reflect live 320 × 240 analysis frames; a bright 10-second photograph is not equivalent to a 200 ms monitoring frame.</p>
+        <p class="note">Diagnostic figures refresh while open. These reflect the selected analysis resolution, not the MP4; a bright 10-second photograph is not equivalent to a 200 ms monitoring frame.</p>
         <div id="detection-live-values" role="status">Open this section to load read-only detection diagnostics.</div>
+        <h3>Overnight history — retained for 7 days</h3>
+        <p class="note">Samples are retained once per UTC minute, including when this page is closed. Select a date to review activity and download a report. Candidate counts are candidate frames, not verified objects.</p>
+        <div class="row"><label for="detection-history-day">UTC date <input type="date" id="detection-history-day"></label>
+          <button type="button" id="detection-history-refresh">Load history</button>
+          <a class="button" id="detection-history-export" href="/api/detection-history.csv">Download CSV</a></div>
+        <div id="detection-history-status" class="note" role="status">Open diagnostics to load history.</div>
+        <svg id="detection-history-chart" viewBox="0 0 700 160" width="100%" role="img" aria-label="Candidate frames and recordings by time" style="max-height:240px;border:1px solid var(--edge);border-radius:8px;background:var(--bg)"></svg>
+        <div id="detection-history-summary" class="note"></div>
         <p class="note">If nearly all pixels are black or white, review exposure and gain. A paused schedule, low storage, event-storm protection or a restrictive zone can prevent recording even when a candidate is detected.</p>
       </div></details>
       </div></details>
@@ -1585,12 +1633,12 @@ def settings():
                        active_profile=selected_profile(cfg)[0], compass_label=compass_name(cfg.get('image_top_bearing', 0)),
                        fps_options=sorted(set(capabilities['fps_options']) | {int(cfg.get('fps', 15))}),
                        camera_reset_defaults={**{key:DEFAULTS[key] for key in (
-                           'resolution','fps',
+                           'resolution','fps','preview_quality',
                            'pre_motion_seconds','post_motion_seconds','max_clip_seconds')},
                            'fps':min(capabilities['fps_options'],key=lambda fps:abs(int(fps)-int(DEFAULTS['fps'])))
                            if capabilities['fps_options'] else int(cfg.get('fps',15))},
                        enabled_methods=enabled_detection_methods(cfg),
-                       detector_defaults=__import__('detection_methods').DEFAULTS,
+                       detector_defaults={**__import__('detection_methods').DEFAULTS,'analysis_resolution':'320x240'},
                        detector_presets=DETECTION_PRESETS)
 
 
@@ -2700,6 +2748,21 @@ def jobs_js():
     return Response((Path(__file__).parent/'jobs_ui.js').read_text(),mimetype='application/javascript')
 
 
+@app.route('/observations/timelapse/completion')
+def timelapse_completion():
+    if not is_admin():abort(403)
+    from time_display import schedule_utc
+    try:
+        minutes=int(request.args.get('duration_minutes','0'))
+        if minutes<1 or minutes>480: raise ValueError('Duration must be 1–480 minutes.')
+        tzname=read_config().get('schedule_timezone','Europe/London')
+        start=schedule_utc(request.args.get('start',''),tzname)
+        end=(start+timedelta(minutes=minutes)).astimezone(zone(tzname))
+        return jsonify(end_local=end.strftime('%d %b %Y, %H:%M %Z'),timezone=tzname,
+                       end_utc=end.astimezone(timezone.utc).isoformat())
+    except (ValueError,TypeError,OverflowError) as exc:
+        return jsonify(error=str(exc)[:150]),400
+
 @app.route('/observations/timelapse/estimate')
 def timelapse_estimate():
     """Read-only preview; scheduling performs the authoritative space check."""
@@ -3094,6 +3157,44 @@ def detection_diagnostics_api():
         if not isinstance(data,dict):raise ValueError('Invalid diagnostics.')
         return jsonify(data)
     except (OSError,ValueError):return jsonify(error='Detector has not published diagnostics yet.'),503
+
+@app.route('/api/detection-history')
+def detection_history_api():
+    if not is_admin(): abort(403)
+    from detection_history import read_day
+    try:
+        day=request.args.get('day') or datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        return jsonify(day=day,timezone='UTC',samples=read_day(day))
+    except (ValueError,OSError) as exc:
+        return jsonify(error='Cannot read detection history for the selected date.'),400
+
+@app.route('/api/detection-history.csv')
+def detection_history_csv():
+    if not is_admin(): abort(403)
+    from detection_history import read_day
+    import csv,io
+    day=request.args.get('day') or datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    try: samples=read_day(day)
+    except (ValueError,OSError):abort(400)
+    output=io.StringIO()
+    fields=('minute_utc','analysis_resolution','configured_fps','analysis_fps','brightness_mean',
+            'nearly_black_percent','nearly_white_percent','active_zone_percent',
+            'record_allowed','recording','reason','iso_equivalent','exposure_ms',
+            'candidate_general','candidate_sky_lights','candidate_mog2',
+            'candidate_transient','events_started',
+            'unconfirmed_general','unconfirmed_sky_lights','unconfirmed_mog2',
+            'unconfirmed_transient','candidates_blocked')
+    writer=csv.DictWriter(output,fieldnames=fields)
+    writer.writeheader()
+    for item in samples:
+        row={key:item.get(key,'') for key in fields}
+        row.update({key:item.get('delta',{}).get(key,'') for key in fields if key.startswith('candidate_') or key.startswith('unconfirmed_') or key in ('events_started','candidates_blocked')})
+        row.update({key:item.get('camera_readings',{}).get(key,'') for key in ('iso_equivalent','exposure_ms')})
+        writer.writerow(row)
+    response=Response(output.getvalue(),mimetype='text/csv')
+    response.headers['Content-Disposition']=f'attachment; filename="moon-cheese-diagnostics-{day}.csv"'
+    response.headers['Cache-Control']='private, no-store'
+    return response
 
 @app.route('/assets/detection-settings.js')
 def detection_settings_js():

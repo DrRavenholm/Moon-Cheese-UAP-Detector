@@ -7,7 +7,7 @@ if(!panel||!button||!result)return;
 button.addEventListener('click',()=>{
   if(!window.confirm('Load defaults for Camera and recording only? Values will not be applied until you press Save settings.'))return;
   let values;try{values=JSON.parse(button.dataset.defaults);}catch(_){result.textContent='Defaults unavailable. No changes made.';return;}
-  for(const name of ['resolution','fps','pre_motion_seconds','post_motion_seconds','max_clip_seconds']){
+  for(const name of ['resolution','fps','preview_quality','pre_motion_seconds','post_motion_seconds','max_clip_seconds']){
     const input=panel.querySelector(`[name="${name}"]`);if(!input)continue;
     const target=String(values[name]);
     if(input.tagName==='SELECT'){

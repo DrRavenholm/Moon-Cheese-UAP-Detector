@@ -23,6 +23,7 @@ RESOLUTIONS = {
 
 DEFAULTS = {
     'fps': 15, 'resolution': '1280x720',
+    'analysis_resolution': '320x240', 'preview_quality': 'standard',
     'detection_profile': 'general', 'detection_methods': None, 'detector_preset': 'custom', 'sky_brightness': 180,
     'sky_min_area': 2, 'sky_max_area': 100,
     'sky_confirm_frames': 3, 'sky_min_movement': 2,

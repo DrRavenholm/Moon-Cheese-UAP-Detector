@@ -5,7 +5,17 @@
   const mode=form.querySelector('#job-mode'),advanced=form.querySelector('#job-advanced');
   const estimate=form.querySelector('#job-estimate'),exposureMode=form.querySelector('#job-exposure-mode');
   const exposure=form.querySelector('#job-exposure'),focus=form.querySelector('#job-focus'),awb=form.querySelector('#job-awb');
-  let estimateCounter=0, timer=null, latest=null;
+  let estimateCounter=0, timer=null, latest=null, completionToken=0, completionTimer=null;
+  const completion=document.getElementById('job-completion');
+  async function finishEstimate(){if(!completion)return;
+    const token=++completionToken, start=form.elements.namedItem('start')?.value||'', minutes=number('duration_minutes');
+    if(!start||!Number.isFinite(minutes)||minutes<1||minutes>480){completion.textContent='Enter start time and duration for a capture completion estimate.';return;}
+    try{const url='/observations/timelapse/completion?start='+encodeURIComponent(start)+'&duration_minutes='+encodeURIComponent(minutes);
+      const response=await fetch(url,{credentials:'same-origin',cache:'no-store'});const data=await response.json();if(token!==completionToken)return;
+      if(!response.ok)throw Error(data.error||'Unavailable');
+      completion.textContent='Estimated capture finish: '+data.end_local+'. Rendering and archiving take additional time.';
+    }catch(err){if(token===completionToken)completion.textContent='Completion estimate unavailable: '+err.message;}}
+  function queueCompletion(){clearTimeout(completionTimer);++completionToken;if(completion)completion.textContent='Calculating capture finish…';completionTimer=setTimeout(finishEstimate,150);}
   const number=name=>Number(form.elements.namedItem(name)?.value||0);
   const gib=n=>(n/1073741824).toFixed(2)+' GiB';
   function render(data){
@@ -35,6 +45,7 @@
     advanced.querySelectorAll('input,select').forEach(el=>{
       el.disabled=!adv||(el===exposure&&!manual)||(el.name==='gain'&&!manual)||
         (el.name==='lens_position'&&!manualFocus)||
+        (el.hasAttribute('data-iso-for')&&!manual)||
         ((el.name==='red_gain'||el.name==='blue_gain')&&!manualWB);
     });
     form.querySelector('#job-lens-wrap').hidden=!manualFocus;
@@ -69,12 +80,14 @@
     timer=setTimeout(fetchEstimate,220);
   }
   form.addEventListener('input',event=>{
-    if(event.target.name==='duration_minutes') queue();
+    if(event.target.name==='duration_minutes'){queue();queueCompletion();}
+    else if(event.target.name==='start') queueCompletion();
     else if(event.target.name==='output_fps'&&latest)render(latest);
     else if(event.target===exposure)controls();
   });
   form.addEventListener('change',event=>{
     if(event.target.name==='duration_minutes'||event.target.name==='interval_seconds')queue();
+    if(event.target.name==='duration_minutes'||event.target.name==='start')queueCompletion();
     else if(event.target.name==='output_fps'&&latest)render(latest);
     else if([mode,exposureMode,exposure,focus,awb].includes(event.target))controls();
   });
@@ -85,5 +98,5 @@
       form.reportValidity();
     }
   });
-  controls();fetchEstimate();
+  controls();fetchEstimate();queueCompletion();
 })();

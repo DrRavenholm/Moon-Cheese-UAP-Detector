@@ -260,6 +260,13 @@
               }catch(error){$('photo-status').textContent='Could not review photo: '+error.message;}
             });
             $('photo-download').replaceChildren(a,document.createTextNode(' '),review);
+            if(info.camera_readings?.iso_equivalent){
+              const infoRow=document.createElement('p');infoRow.className='note';
+              infoRow.textContent='Captured ISO equivalent: '+info.camera_readings.iso_equivalent+
+                ' · analogue gain '+(info.camera_readings.analogue_gain??'—')+'× · digital gain '+
+                (info.camera_readings.digital_gain??'—')+'×';
+              $('photo-download').append(infoRow);
+            }
           } else if(info.state==='error' || Date.now()-started>240000) {
             clearInterval(photoPolling);photoPolling=null;btn.disabled=false;
             exposurePanel.hidden=false;exposurePhase.textContent='Capture failed or timed out';

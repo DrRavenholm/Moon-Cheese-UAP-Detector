@@ -52,7 +52,13 @@ def run_camera(settings):
     from picamera2.outputs import CircularOutput2, PyavOutput
     from libcamera import Transform, controls as lc_controls
 
-    w, h = 320, 240
+    analysis_size = str(settings.get('analysis_resolution', '320x240'))
+    if analysis_size not in ('320x240','640x360','640x480'):
+        raise ValueError('Unsupported analysis resolution')
+    w,h = (int(part) for part in analysis_size.split('x'))
+    pixel_scale = w*h/(320*240)
+    movement_scale = ((w/320)*(h/240))**.5
+    def area_threshold(value): return max(1,round(float(value)*pixel_scale))
     fps = int(settings.get('fps', 15))
     caps = capture_capabilities()
     if not 5 <= fps <= caps['max_fps']:
@@ -76,15 +82,16 @@ def run_camera(settings):
     profile = settings.get('detection_profile', 'general')  # Old event labels retained.
     sky_tracker = (SkyLightTracker(
         brightness=int(settings.get('sky_brightness', 180)),
-        min_area=int(settings.get('sky_min_area', 2)),
-        max_area=int(settings.get('sky_max_area', 100)),
+        min_area=area_threshold(settings.get('sky_min_area', 2)),
+        max_area=area_threshold(settings.get('sky_max_area', 100)),
         confirm_frames=int(settings.get('sky_confirm_frames', 3)),
-        min_movement=int(settings.get('sky_min_movement', 2)))
+        min_movement=float(settings.get('sky_min_movement', 2))*movement_scale,
+        max_jump=36*movement_scale)
         if 'sky_lights' in methods else None)
-    adaptive = (AdaptiveBackground(settings.get('mog2_threshold',24), settings.get('mog2_min_area',6),
-                                   settings.get('mog2_confirm_frames',2)) if 'mog2' in methods else None)
-    transient = (TransientDetector(settings.get('transient_threshold',45), settings.get('transient_min_area',2),
-                                   settings.get('transient_min_length',7)) if 'transient' in methods else None)
+    adaptive = (AdaptiveBackground(settings.get('mog2_threshold',24), area_threshold(settings.get('mog2_min_area',6)),
+                                   settings.get('mog2_confirm_frames',2),area_scale=pixel_scale) if 'mog2' in methods else None)
+    transient = (TransientDetector(settings.get('transient_threshold',45), area_threshold(settings.get('transient_min_area',2)),
+                                   max(3,round(float(settings.get('transient_min_length',7))*movement_scale)),area_scale=pixel_scale) if 'transient' in methods else None)
     selected_slot, selected_cfg = selected_profile(settings)
     camera = Picamera2()
     allowed_controls = camera.camera_controls
@@ -104,9 +111,13 @@ def run_camera(settings):
     last_preview = 0
     last_heartbeat = 0
     last_diagnostics = 0
+    latest_camera_readings = {}
     last_analysis_time = None
     diagnostics_counts = {'frames':0,'events_started':0,'candidate_general':0,
-                          'candidate_sky_lights':0,'candidate_mog2':0,'candidate_transient':0}
+                          'candidate_sky_lights':0,'candidate_mog2':0,'candidate_transient':0,
+                          'unconfirmed_general':0,'unconfirmed_sky_lights':0,
+                          'unconfirmed_mog2':0,'unconfirmed_transient':0,
+                          'candidates_blocked':0}
     recording = False
     filename = None
     thumbnail = None
@@ -301,9 +312,13 @@ def run_camera(settings):
                 # lores analysis plane. The recorder and motion logic are unchanged.
                 try:
                     colour = cv2.cvtColor(camera.capture_array('main'), cv2.COLOR_YUV2BGR_I420)
-                    thumb = cv2.resize(colour, (640, max(1, int(640 * video_height / video_width))))
+                    quality = str(settings.get('preview_quality','standard'))
+                    if quality not in ('standard','balanced','detailed'): quality='standard'
+                    width,jpeg_quality={'standard':(640,75),'balanced':(960,85),'detailed':(1280,90)}[quality]
+                    width=min(width,video_width)
+                    thumb = cv2.resize(colour, (width, max(1, int(width * video_height / video_width))))
                     preview_tmp = DATA / 'latest-pending.jpg'
-                    if cv2.imwrite(str(preview_tmp), thumb, [cv2.IMWRITE_JPEG_QUALITY, 75]):
+                    if cv2.imwrite(str(preview_tmp), thumb, [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality]):
                         preview_tmp.replace(DATA / 'latest.jpg')
                     # Admin HD cache is demand-driven: no additional camera capture,
                     # and no full-HD JPEG is written when the Live Camera is idle.
@@ -313,6 +328,14 @@ def run_camera(settings):
                         active = time.time() - hd_request.stat().st_mtime < 35
                     except OSError:
                         active = False
+                    # Read actual gain/exposure metadata from the existing camera
+                    # stream, without creating a second camera owner. If the
+                    # hardware cannot report it, show unavailable rather than ISO.
+                    try:
+                        from camera_iso import readings
+                        latest_camera_readings=readings(camera.capture_metadata())
+                    except (OSError,RuntimeError,ValueError,AttributeError):
+                        latest_camera_readings={}
                     if active:
                         hd_tmp = DATA / 'latest-hd-pending.jpg'
                         if cv2.imwrite(str(hd_tmp), colour, [cv2.IMWRITE_JPEG_QUALITY, 91]):
@@ -395,7 +418,7 @@ def run_camera(settings):
                                          int(settings.get('pixel_threshold', 32)),
                                          255, cv2.THRESH_BINARY)[1]
                     scores['general'] = int(cv2.countNonZero(diff))
-                    candidates['general'] = scores['general'] >= int(settings.get('min_changed_pixels', 65))
+                    candidates['general'] = scores['general'] >= area_threshold(settings.get('min_changed_pixels', 65))
                 if sky_tracker is not None:
                     candidates['sky_lights'], scores['sky_lights'] = sky_tracker.feed(analysis_frame)
                 if adaptive is not None:
@@ -426,6 +449,9 @@ def run_camera(settings):
             diagnostics_counts['frames']+=1
             for method,flag in candidates.items():
                 if flag:diagnostics_counts['candidate_'+method]+=1
+                elif scores.get(method,0)>0:diagnostics_counts['unconfirmed_'+method]+=1
+            if any(candidates.values()) and (not record_allowed or low_disk or storm.cooling(now) or now < suppress_detection_until):
+                diagnostics_counts['candidates_blocked']+=1
             if now - last_diagnostics >= 4:
                 last_diagnostics=now
                 if not cv2.countNonZero(detection_mask):reason='No pixels available: review detection zones'
@@ -440,7 +466,9 @@ def run_camera(settings):
                 measured_fps=1/(now-last_analysis_time) if last_analysis_time and now>last_analysis_time else fps
                 try:
                     publish_diagnostics(latest_frame,methods,scores,candidates,record_allowed,
-                                        reason,recording,active_pixel_fraction,measured_fps,diagnostics_counts)
+                                        reason,recording,active_pixel_fraction,measured_fps,diagnostics_counts,
+                                        analysis_resolution=analysis_size,configured_fps=fps,
+                                        camera_readings=latest_camera_readings)
                 except OSError:LOG.warning('Could not publish detection diagnostics')
             last_analysis_time=now
             # Read new settings without requiring commands or sudo from the web app.
@@ -450,7 +478,7 @@ def run_camera(settings):
                 newest = SETTINGS.stat().st_mtime_ns if SETTINGS.exists() else 0
                 if newest != settings_version:
                     new_cfg = read_config()
-                    camera_keys = ('fps', 'resolution', 'detection_profile', 'detection_methods', 'detector_preset', 'mog2_threshold',
+                    camera_keys = ('fps', 'resolution', 'analysis_resolution', 'preview_quality', 'detection_profile', 'detection_methods', 'detector_preset', 'mog2_threshold',
                                    'mog2_min_area','mog2_confirm_frames','transient_threshold',
                                    'transient_min_area','transient_min_length','sky_brightness',
                                    'sky_min_area', 'sky_max_area', 'sky_confirm_frames',

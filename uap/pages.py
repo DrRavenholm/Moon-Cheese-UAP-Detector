@@ -16,6 +16,18 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.1.5','title':'Camera Control, Detector History and Documentation','date':'18 Nov 2026',
+   'summary':'Profile-aware frame-rate validation, selectable detector analysis resolution, seven-day overnight diagnostics, ISO-equivalent presentation and Time-lapse completion estimates.',
+   'details':[
+     'Fixed the false blocking error when an unused Custom camera profile has an exposure longer than the newly selected frame interval; Day/Night switching validates both relevant profiles, without altering saved profiles.',
+     'Introduced optional 640×360 / 640×480 analysis modes, retaining the original 320×240 upgrade default; advanced modes must be compatible with camera aspect ratio and benchmarked on Pi hardware.',
+     'Reformatted Live Detection Diagnostics with labelled counters and added one-minute local SQLite history for seven days, UTC-day graphs and administrator-only CSV export.',
+     'Added configurable Standard/Balanced/Detailed preview compression quality independently of full-resolution recordings.',
+     'Added ISO-equivalent shortcuts alongside the existing manual analogue-gain control, and readouts for actual gain/exposure where camera metadata is available; sensor ISO is not independently calibrated.',
+     'Showed an estimated Time-lapse capture completion date/time beside Duration using the detector time zone and existing DST checks.',
+     'Rebuilt the GitHub README and roadmap around current features, supported installation and accurate plans, retaining the installer credentials retrieval command beside the one-liner.',
+     'Camera ownership, media, astronomical data, zone masks, accounts, credentials, network and notification services remain preserved. Hardware acceptance is still required.'
+   ]},
   {'version':'1.0.1.4','title':'Detection Reliability, Zone Editing and Settings Reorganisation','date':'18 Nov 2026',
    'summary':'Independent selectable detection engines, night-sky diagnostics, cumulative bright-point tracking and a rebuilt camera zone editor.',
    'details':[
@@ -805,3 +817,11 @@ HELP += """<section class='panel' id='detector-reliability'><h2>Detection method
 <p>Open Live Detection Diagnostics to see image brightness, fully black/white saturation, candidate scores, detector FPS, schedule/cooldown state and event counts. A ten-second time-lapse exposure is much brighter than the short individual frames used for continuous monitoring. If the analysis image is nearly black/white, correct camera exposure/gain; lower detection thresholds alone cannot recover missing pixels.</p>
 <p>Detection Zones: red exclusions alone are sufficient. Everything not covered by red remains monitored unless you add green include zones. Polygon: single-click points and press Finish shape, NOT double-click. Trace Horizon: click along the treetops left to right then Finish shape; everything below will be excluded. Freehand: press and drag, then release. Use Undo/Redo, Edit corners and Remove zone to adjust. Finish an outline, enable zones, and press Save detection zones separately. The camera preview is cached; no extra camera connection is opened, and videos remain full-frame.</p>
 <p>Experimental algorithms can create extra alerts from hot pixels, moving clouds, insects and sensor noise. Recheck CPU load and saved events after changing modes. Dew-heater GPIO wiring is not enabled without a confirmed compatible controller and Pi power-HAT design.</p></section>"""
+
+HELP += """<section class='panel' id='detector-v1015'><h2>Camera sensitivity and diagnostics (v1.0.1.5)</h2>
+<p>On Detector Settings, changing the frame rate only validates the active manual exposure profile; a saved unused Custom profile will not prevent the change. Sunrise/sunset mode validates both Day and Night. If an exposure cannot fit the selected frame period, adjust the active profile or frame rate before saving. No inactive profile is automatically overwritten.</p>
+<p>Under Detection Methods &amp; Sensitivity, analysis resolution can stay at 320×240 or be raised to 640×360 for widescreen video or 640×480 for VGA. Raising resolution increases CPU work and can change detector sensitivity; test before using it unattended. Recorded MP4 quality is separate from detector analysis.</p>
+<p>Live Detection Diagnostics shows the configured and measured analysis speed, capture status, per-method candidates and camera gain/exposure information when reported. Expand the history controls to review UTC-day minute samples retained for seven days and download CSV. This history begins after installing the update; it does not reconstruct missing past nights.</p>
+<p>ISO-equivalent shortcuts in camera profiles, Photography and advanced Time-lapse set the existing analogue gain rather than a separate calibrated ISO control. Approximate ISO is 100 × analogue gain × digital gain; automatic exposure and digital processing may change the reading. Standard, Balanced and Detailed preview quality only changes cached JPEG snapshots, not original recording quality.</p>
+<p>Time-lapse Duration displays an estimated capture finish in the detector timezone. Final MP4 rendering and ZIP/source archiving can continue after the capture period.</p>
+</section>"""

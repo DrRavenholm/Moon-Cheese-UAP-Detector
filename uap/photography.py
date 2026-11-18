@@ -179,7 +179,9 @@ def capture_still(job, rotate180=False):
             state(token,'capturing','Automatic photograph in progress')
         # Starting the still stream with manual controls allows capture_file
         # to wait for a full exposure. No second camera owner is created.
-        cam.capture_file(str(outfile))
+        capture_metadata=cam.capture_file(str(outfile))
+        from camera_iso import readings as camera_iso_readings
+        actual_capture_readings=camera_iso_readings(capture_metadata)
         timings['exposure_capture_seconds']=round(time.time()-stage_at,3)
         stage_at=time.time()
         state(token,'saving','Finalising photograph',timings=timings,elapsed_seconds=round(time.time()-started,2))
@@ -188,7 +190,8 @@ def capture_still(job, rotate180=False):
         timings['saving_seconds']=round(time.time()-stage_at,3)
         state(token,'restoring','Restoring camera monitoring',timings=timings,elapsed_seconds=round(time.time()-started,2))
         success_payload=dict(format=p['format'],width=int(native[0]),height=int(native[1]),
-                             bytes=outfile.stat().st_size,created_utc=datetime.now(timezone.utc).isoformat())
+                             bytes=outfile.stat().st_size,created_utc=datetime.now(timezone.utc).isoformat(),
+                             camera_readings=actual_capture_readings)
     except Exception as exc:
         outfile.unlink(missing_ok=True)
         state(token,'error',str(exc),timings=timings,elapsed_seconds=round(time.time()-started,2))
