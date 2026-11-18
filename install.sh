@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.1.1: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1.2: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.1.1'
+VERSION='1.0.1.2'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
@@ -20,14 +20,14 @@ if [[ -f SHA256SUMS ]]; then
 fi
 for file in dashboard.py detector.py common.py observation_jobs.py photography.py camera_profiles.py \
             draft_preview.py hardware.py scheduling.py delivery.py notifications.py \
-            network_setup.py network_worker.py network_ui.py; do
+            network_setup.py network_worker.py network_ui.py sky_map_engine.py sky_map_data.py detection_zones.py; do
   [[ -f "uap/$file" ]] || fail "Incomplete archive: missing uap/$file"
 done
 for file in uap-dashboard.service uap-detector.service uap-notifications.service \
             uap-notifications.timer uap-cleanup.service uap-cleanup.timer \
             uap-power-action.service uap-power-action.path \
             uap-network-worker.service uap-network-worker.path uap-ddns.service uap-ddns.timer \
-            uap-network-recovery.service uap-network-recovery.timer uap-cloudflared.service uap-cloudflared-candidate.service uap-software-update.service uap-software-update.path; do
+            uap-network-recovery.service uap-network-recovery.timer uap-cloudflared.service uap-cloudflared-candidate.service uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer; do
   [[ -f "systemd/$file" ]] || fail "Incomplete archive: missing systemd/$file"
 done
 for file in npm/compose.yaml npm/provision_npm.py; do
@@ -106,12 +106,20 @@ if (( ! EXISTING )); then
   apt-cache show python3-picamera2 >/dev/null 2>&1 || \
     fail 'This operating system has no python3-picamera2 package. Enable the compatible camera repository or use Raspberry Pi OS; no application has been installed.'
   apt-get install -y ca-certificates curl gnupg python3-picamera2 python3-opencv \
-    python3-numpy python3-flask python3-cryptography gunicorn ffmpeg sqlite3
+    python3-numpy python3-flask python3-cryptography python3-skyfield gunicorn ffmpeg sqlite3
 else
   info 'Upgrading an existing installation; preserving its packages and proxy'
   # Existing installs may lack the cryptography package needed by email/push/backups.
   python3 -c 'import flask,werkzeug,cryptography' >/dev/null 2>&1 || \
     fail 'Python Flask/Werkzeug/cryptography missing; install required Raspberry Pi OS packages before upgrading. No application changes made.'
+fi
+# Astronomy runs in an independent worker, but its Debian Skyfield dependency
+# must exist before deploying new code. Do not mutate an existing installation
+# if its package cannot be obtained while offline.
+if ! python3 -c 'import skyfield, sgp4' >/dev/null 2>&1; then
+  info 'Installing Debian Skyfield astronomy calculation dependencies'
+  apt-get update || fail 'Cannot refresh package lists to install Skyfield. Existing Moon Cheese installation unchanged.'
+  apt-get install -y python3-skyfield python3-sgp4 || fail 'Cannot install Skyfield. Existing Moon Cheese installation unchanged.'
 fi
 # Do not reset an existing login, configuration, database, media or credentials.
 if (( EXISTING )); then
@@ -162,7 +170,7 @@ trap rollback EXIT
 info 'Installing complete application and runtime files'
 install -d -m 0755 /opt/uap-detector "$APP" "$ETC"
 install -d -m 0750 -o "$SERVICE_USER" -g "$SERVICE_GROUP" "$DATA"
-for dir in recordings thumbnails photography draft-previews observation-jobs power-requests network-requests software-update-requests; do
+for dir in recordings thumbnails photography draft-previews observation-jobs power-requests network-requests software-update-requests sky-map-data sky-map-data/requests; do
   install -d -m 0750 -o "$SERVICE_USER" -g "$SERVICE_GROUP" "$DATA/$dir"
 done
 # Pending IP changes survive reboot; this folder is ROOT-ONLY, not readable by dashboard.
@@ -197,7 +205,7 @@ done
 for name in uap-dashboard.service uap-detector.service uap-cleanup.service uap-cleanup.timer \
             uap-notifications.service uap-notifications.timer uap-power-action.service uap-power-action.path \
             uap-network-worker.service uap-network-worker.path uap-ddns.service uap-ddns.timer \
-            uap-network-recovery.service uap-network-recovery.timer uap-software-update.service uap-software-update.path; do
+            uap-network-recovery.service uap-network-recovery.timer uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer; do
   if [[ ! -e "/etc/systemd/system/$name" ]]; then
     install -m 0644 "systemd/$name" "/etc/systemd/system/$name"
   fi
@@ -246,7 +254,7 @@ EOF
 systemctl daemon-reload
 info 'Activating dashboard and background services'
 systemctl enable uap-dashboard.service uap-detector.service >/dev/null
-systemctl enable --now uap-cleanup.timer uap-notifications.timer uap-power-action.path uap-network-worker.path uap-network-recovery.timer uap-software-update.path >/dev/null
+systemctl enable --now uap-cleanup.timer uap-notifications.timer uap-power-action.path uap-network-worker.path uap-network-recovery.timer uap-software-update.path uap-sky-data.timer uap-sky-data.path >/dev/null
 systemctl restart uap-dashboard.service
 # The detector engine in v0.9.9.2 is unchanged in v0.9.9.3; no camera restart then.
 if (( ! EXISTING )); then

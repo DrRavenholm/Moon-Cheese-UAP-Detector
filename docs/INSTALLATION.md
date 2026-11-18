@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.1 maintenance release uses the same one-command stable installation process.
+This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.2 maintenance release uses the same one-command stable installation process.
 
 ## Before installation
 
@@ -68,12 +68,22 @@ For an existing installation, the dashboard's **Software updates** panel support
 
 For the maintainer's source and release preparation requirements, see [Publishing releases](RELEASING.md).
 
-## v1.0.1.1 acceptance check
+## v1.0.1.2 acceptance check
 
 Also verify theme persistence without blue flashes, the new colour pop-out, service repair safeguards and a real manual long-exposure countdown on Photography.
 
-After the v1.0.1.1 stable release is public, verify the dashboard displays **v1.0.1.1**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
+After the v1.0.1.2 stable release is public, verify the dashboard displays **v1.0.1.2**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
 
 ## Cloudflare Tunnel permissions and troubleshooting
 
 Tunnel access is optional. On the dashboard, expand System Administration → Network and remote access → Cloudflare Tunnel → Cloudflare setup guide. It explains where to obtain your Account ID and Zone ID, and to create a custom API token limited to your own Account and DNS Zone. Configure Account → Cloudflare Tunnel → Edit, Zone → DNS → Edit and Zone → Zone → Read. Enter these into Moon Cheese alongside your chosen subdomain; never share an API token or use a Global API Key. Cloudflare Error 1033 usually means a disconnected `cloudflared` connector or a DNS target pointing to the wrong tunnel; consult the same guide before changing any DNS resources.
+
+## Sky Maps first-run data (v1.0.1.2)
+
+The release archive deliberately contains no large star catalogues, JPL ephemerides or orbital datasets. After logging in as an administrator, open **Sky Maps → Data & Updates**, expand **All astronomical data**, and choose **Download all missing data** using an internet-connected Pi. Status and source URLs appear in each individual expandable section. If no data is installed, Moon Cheese camera detection and recording still work.
+
+The star/constellation, Sun/Moon/planet, world map, and optional deep-sky files are cached under `/var/lib/uap-detector/sky-map-data`. Satellite data may be refreshed daily at an administrator-selected time using CelesTrak. The new independent `uap-sky-data.service`, `.path`, and `.timer` run the download manager, not the camera. The installer uses the Raspberry Pi OS/Debian `python3-skyfield` and `python3-sgp4` packages for local calculations; an existing system that lacks these packages requires an internet-connected package-install step before upgrade can proceed. Backups and upgrades preserve the local astronomical cache. Aircraft providers and streaming are not installed.
+
+## Service Repair and detection zones (v1.0.1.2)
+
+**Repair services** is intentionally always clickable for administrators under System Health → Software updates. It requires the current administrator password and interruption acknowledgement before reinstalling backed-up Moon Cheese-owned units and reasserting required service status. It can interrupt a running camera job, and does not stop competing third-party processes. Detector Settings now has **Detection zones**, disabled until explicitly enabled and saved; video remains uncropped.

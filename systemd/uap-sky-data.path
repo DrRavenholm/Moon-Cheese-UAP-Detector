@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch Moon Cheese astronomical download requests
+
+[Path]
+PathExistsGlob=/var/lib/uap-detector/sky-map-data/requests/*.json
+Unit=uap-sky-data.service
+
+[Install]
+WantedBy=multi-user.target

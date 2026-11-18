@@ -1,0 +1,11 @@
+[Unit]
+Description=Check scheduled satellite data updates separately from camera processing
+
+[Timer]
+OnCalendar=*:0/10
+RandomizedDelaySec=90s
+Persistent=true
+Unit=uap-sky-data.service
+
+[Install]
+WantedBy=timers.target

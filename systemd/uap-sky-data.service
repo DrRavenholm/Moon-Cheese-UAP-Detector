@@ -1,0 +1,15 @@
+[Unit]
+Description=Moon Cheese astronomical dataset downloader (no camera access)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=uapdetector
+Group=uapdetector
+WorkingDirectory=/opt/uap-detector/uap
+ExecStart=/usr/bin/python3 /opt/uap-detector/uap/sky_data_worker.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uap-detector
+TimeoutStartSec=600

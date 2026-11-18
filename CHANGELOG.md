@@ -1,5 +1,20 @@
 # Moon Cheese UAP Detector — Release History
 
+## v1.0.1.2 — Sky Maps, Detection Zones and Recovery Corrections
+**Released:** 17 November 2026
+
+- Added a dedicated **Sky Maps** main menu with linked local all-sky and Earth maps, object search/highlighting, optional layers, exact date/time entry, +/-24-hour time slider, playback controls and Reset to Now.
+- Added **Sky Maps → Data & Updates** with separate, collapsed-by-default sections for star names/catalogue, constellation lines/boundaries, Sun/Moon/planet ephemeris, Earth coastlines, active satellites and optional bright deep-sky objects. Download All retrieves missing datasets. Files are downloaded to persistent local storage **after installation**; no large astronomical datasets or third-party API keys ship in the package.
+- Introduced a separate camera-independent download service, daily scheduled CelesTrak OMM/CSV orbital updates at the detector's configured local time, validation, caching, administrator-only download controls, provider cooldown and automatic-request halt after provider failures. Astronomical maps use only local files at runtime; predictions require appropriately dated orbital data and are not confirmed object identifications.
+- Added **View sky at this event** on observation pages. New recordings store their latitude/longitude; older recordings without a location are explicitly marked as approximations using the current detector coordinates.
+- Added an administrator Detection Zones editor over the last cached camera preview, with include/exclude rectangles and polygons, independent Save Zones, and masks applied to both motion and sky-light triggers. The default remains full-frame detection; saved photos and video are never cropped.
+- Changed **Repair services** to an always-available, password-protected, explicitly acknowledged systemd restoration. It backs up matching or modified Moon Cheese-owned unit files, reasserts required Moon Cheese service states and restarts Moon Cheese's dashboard and detector; optional networking and unrelated applications are left untouched.
+- Corrected Photography progress to retain visible preparation, exposure estimate, saving and monitoring restoration states, and to record stage-duration diagnostics. Five seconds of shutter exposure does not include camera switching or processing time.
+- Added the Debian Skyfield astronomy calculation dependency on upgrade. Astronomical data and existing Pi recordings, credentials, network configuration and observation database are retained across normal upgrades.
+- **Validation note:** automated isolated tests and installer/secure-extraction checks apply to the release package; real camera behaviour, initial network downloads, live Skyfield rendering and Raspberry Pi systemd service restarts still require device acceptance.
+
+
+
 ## v1.0.1.1 — 14 November 2026 (maintenance release)
 
 - Fixed theme flash, completed themed panel colours, and introduced a compact selector for all visitors.
