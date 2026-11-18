@@ -112,7 +112,7 @@ GUIDE = [
   ('Motion sensitivity', 'Pixel difference threshold controls how much individual pixels must change. Changed pixels to trigger sets how many pixels must differ. Lower values are more sensitive but can cause more false alarms.'),
   ('Pre-motion and post-motion', 'Set the amount of video leading into and following detected motion. Pre-motion capture uses a rolling video buffer; exact lead-in can differ slightly.'),
   ('Maximum clip length', 'Long continuous movement rolls over into another recording when it reaches the configured limit. A manual full-resolution photograph deliberately ends the current clip early.'),
-  ('Detection profile', 'General motion finds larger image changes. Moving sky lights tracks moving bright points. Combined triggers when either algorithm detects something.'),
+  ('Detection methods & sensitivity', 'Enable General Motion, Moving Sky Lights, MOG2 or Transient & Streak independently. Each runs through one shared recorder. Brightness, changes, object size and confirmation thresholds are under the corresponding method. Newly added methods are off until enabled.'),
   ('Sky-light settings', 'Adjust the minimum brightness, smallest/largest object area, confirming frames and required movement. Values apply to the reduced analysis frame.'),
  ]),
  ('Settings — camera profiles', [
@@ -279,7 +279,7 @@ GUIDE.extend([
  ]),
  ('Camera settings', [
   ('Resolution and frames per second', 'Choose from hardware-supported recording resolutions and FPS. Higher rates improve temporal detail but may limit exposure and increase storage usage. The camera restarts safely when changes are applied.'),
-  ('Motion and light profiles', 'Choose General motion, Moving bright points, or Combined. Set thresholds for pixel changes or sky-light intensity, size and consecutive frames. The chosen profile identifies trigger algorithms, not physical objects.'),
+  ('Detection methods and sensitivity', 'Check General Motion, Moving Sky Lights, Adaptive Background (MOG2), or Transient & Streak independently. Open each engine for its thresholds; use presets or per-engine resets without altering camera exposures, recordings or zone masks. A detection is not identification.'),
   ('Camera presets', 'Automatic exposure, separately editable Day and Night, and Custom 1/Custom 2 profiles control shutter, gain, white balance, focus, colour and brightness. Saved profiles affect ordinary detection; scheduled Advanced photography is temporary.'),
   ('Testing an unsaved profile', 'Choose a profile, edit fields and select Preview unsaved changes; the camera temporarily tests the settings and restores the active profile. Use Reset to defaults then Save settings only when satisfied.'),
   ('Rotation and compass bearing', 'Rotate 180° if the camera is mounted upside down. Top-image bearing (0 North, 90 East, 180 South, 270 West) and elevation (0 horizon, 90 up) are saved metadata, not exact calibrated sky coordinates.'),
@@ -563,8 +563,8 @@ GUIDE.extend([
   ('No API key or aircraft tracking', 'The listed astronomical download providers do not require the installation owner to configure an API key. Aircraft integration and a dedicated 16:9 OBS browser-streaming page are not included in v1.0.1.3.'),
  ]),
  ('Detection zones', [
-  ('Draw monitor and exclusion zones', 'In Detector Settings expand Detection zones and Refresh preview. Choose Monitor/Ignore and Rectangle/Polygon, drag a rectangle or click polygon corners and Finish polygon. Enable the zones and select Save Zones. The preview comes from the detector’s existing cached camera image and does not open a second camera connection.'),
-  ('Zone behaviour and safeguards', 'Zones apply to both general motion and moving sky lights. If any monitor zones are configured only their combined area is eligible; ignore zones then remove areas from it. Save Zones is separate from Camera settings and does not crop the saved MP4, photos or thumbnails. Zones are off by default; avoid excluding the entire image.'),
+  ('Draw monitor and exclusion zones', 'In Detector Settings open Detection Zones. For trees, use red Ignore zones only; everything outside remains monitored. Polygon uses SINGLE clicks and the Finish shape button, never a double-click. Trace Horizon means click the tops of trees left-to-right and Finish shape: everything below is excluded. Freehand uses drag and release. Use Edit corners, Undo/Redo or Remove an individual zone. Enable zones and separately Save detection zones. No extra camera connection is opened.'),
+  ('Zone behaviour and safeguards', 'Zones apply to every enabled detection method. If any monitor zones are configured only their combined area is eligible; ignore zones then remove areas from it. Save Zones is separate from Camera settings and does not crop the saved MP4, photos or thumbnails. Zones are off by default; avoid excluding the entire image.'),
  ]),
  ('Service reassertion', [
   ('Always-available Repair services', 'Administration → System Health → Software updates has an always-available Repair services button. Enter your administrator password and check the interruption acknowledgement. Moon Cheese backs up and reinstalls official Moon Cheese systemd unit files even if matching, reloads systemd, re-enables mandatory Moon Cheese services and restarts detector/dashboard. Active recordings can be interrupted; optional Cloudflare/DDNS enablement is preserved.'),

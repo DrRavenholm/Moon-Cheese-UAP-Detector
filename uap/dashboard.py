@@ -51,6 +51,7 @@ from notifications import (migrate as migrate_notices, preferences as notice_pre
                            update_preferences, WEEKDAYS)
 from hardware import capture_capabilities
 from trigger_logic import SOURCE_LABELS
+from detection_methods import selected as enabled_detection_methods, METHODS as DETECTION_METHODS, PRESETS as DETECTION_PRESETS
 from draft_preview import enqueue, result_path, image_path, pending_request, expire_old_files
 from photography import queue_capture, result_path as photo_result_path, output_path as photo_output_path, state as photo_set_state
 from camera_profiles import (SLOTS, MODES, get_profiles, validate_profile, base_profiles,
@@ -1228,9 +1229,15 @@ def validated_settings(form):
     resolution = form.get('resolution', '')
     if resolution not in RESOLUTIONS:
         raise ValueError('Choose a supported camera resolution')
-    detection_profile = form.get('detection_profile', 'general')
-    if detection_profile not in ('general', 'sky_lights', 'combined'):
-        raise ValueError('Choose a supported detection profile')
+    detection_methods = form.getlist('detection_methods')
+    if not detection_methods or len(detection_methods) != len(set(detection_methods)) or any(x not in DETECTION_METHODS for x in detection_methods):
+        raise ValueError('Enable at least one valid detection method.')
+    # Old configuration key is retained for compatibility with existing tools.
+    detection_profile = ('general' if detection_methods==['general'] else
+                         'sky_lights' if detection_methods==['sky_lights'] else 'combined')
+    detector_preset = form.get('detector_preset','custom')
+    if detector_preset not in (*DETECTION_PRESETS,'custom'):
+        raise ValueError('Choose a valid detection preset.')
     location_name = form.get('location_name', '').strip()[:100]
     if any(ord(ch) < 32 for ch in location_name):
         raise ValueError('Location name contains invalid characters')
@@ -1287,6 +1294,8 @@ def validated_settings(form):
         'fps': fps_value,
         'resolution': resolution,
         'detection_profile': detection_profile,
+        'detection_methods': detection_methods,
+        'detector_preset': detector_preset,
         'sky_brightness': integer('sky_brightness', 100, 250),
         'sky_min_area': integer('sky_min_area', 1, 40),
         'sky_max_area': integer('sky_max_area', 10, 400),
@@ -1294,6 +1303,12 @@ def validated_settings(form):
         'sky_min_movement': integer('sky_min_movement', 1, 15),
         'pixel_threshold': integer('pixel_threshold', 1, 255),
         'min_changed_pixels': integer('min_changed_pixels', 10, 10000),
+        'mog2_threshold':integer('mog2_threshold', 8, 100),
+        'mog2_min_area':integer('mog2_min_area', 2, 500),
+        'mog2_confirm_frames':integer('mog2_confirm_frames', 1, 8),
+        'transient_threshold':integer('transient_threshold', 15, 140),
+        'transient_min_area':integer('transient_min_area', 2, 100),
+        'transient_min_length':integer('transient_min_length', 3, 40),
         'pre_motion_seconds': integer('pre_motion_seconds', 1, 15),
         'post_motion_seconds': integer('post_motion_seconds', 1, 60),
         'max_clip_seconds': integer('max_clip_seconds', 30, 3600),
@@ -1329,6 +1344,7 @@ def validated_settings(form):
 def settings():
     if not logged_in():
         return redirect(url_for('login'))
+    if not is_admin():abort(403)
     error = ''
     if request.method == 'POST':
         check_csrf()
@@ -1360,11 +1376,12 @@ def settings():
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <script src="{{ url_for('profile_defaults_js') }}" defer></script>
     <script src="{{ url_for('camera_reset_js') }}" defer></script>
+    <script src="{{ url_for('detection_settings_js') }}" defer></script>
     <form id="uap-settings-form" method="post"><input type="hidden" name="csrf" value="{{ csrf }}">
     <div class="between" style="margin-bottom:12px"><span class="note">Open a section to adjust settings. Test camera changes before saving.</span><button type="submit">Save settings</button></div>
     <div class="cols"><div>
       <details class="panel setting-section"><summary>Camera and recording</summary><div class="setting-content" id="camera-recording-settings">
-      <p class="note">Motion sensitivity may need different values indoors and under the night sky.</p>
+      <p class="note">Controls the recorded video and pre/post-event footage. Detector thresholds are now grouped under Detection Methods &amp; Sensitivity.</p>
       <div class="options">
       <div><label for="camera_resolution">Recording resolution</label><select name="resolution" id="camera_resolution" required>
       <option value="640x480" {% if cfg.resolution == '640x480' %}selected{% endif %}>640 × 480 (VGA)</option>
@@ -1373,13 +1390,11 @@ def settings():
       <div><label for="camera_fps">Camera frame rate</label><select name="fps" id="camera_fps" required>
       {% for rate in fps_options %}<option value="{{ rate }}" {% if cfg.fps|int == rate %}selected{% endif %}>{{ rate }} fps{% if rate > 30 %} — experimental{% endif %}</option>{% endfor %}
       </select></div>
-      <div><label>Pixel difference threshold (1–255)</label><input type="number" name="pixel_threshold" min="1" max="255" value="{{ cfg.pixel_threshold }}" required></div>
-      <div><label>Changed pixels to trigger (10–10000)</label><input type="number" name="min_changed_pixels" min="10" max="10000" value="{{ cfg.min_changed_pixels }}" required></div>
       <div><label>Seconds before motion (1–15)</label><input type="number" name="pre_motion_seconds" min="1" max="15" value="{{ cfg.pre_motion_seconds }}" required></div>
       <div><label>Seconds after motion (1–60)</label><input type="number" name="post_motion_seconds" min="1" max="60" value="{{ cfg.post_motion_seconds }}" required></div>
       <div><label>Maximum clip length (30–3600 sec)</label><input type="number" name="max_clip_seconds" min="30" max="3600" value="{{ cfg.max_clip_seconds }}" required></div>
       </div><p class="note">Detected hardware: {{ capabilities.pi_model }} · camera: {{ capabilities.camera_model }}. Higher frame rates are only offered on detected compatible devices. {% if capabilities.experimental %}Rates above 30 fps are experimental; check real MP4 frame rate and CPU load before leaving the recorder unattended.{% endif %}</p>
-      <p class="note">Higher resolutions use more processing power and disk space. Changes take effect after the current recording has finished. Lower the changed-pixel value to detect smaller movement; too low will increase false alarms.</p>
+      <p class="note">Higher resolutions use more processing power and disk space. Changes take effect after the current recording has finished. Use Detection Methods &amp; Sensitivity to adjust motion sensitivity; camera and detection settings are separate.</p>
       <div class="row"><button type="button" id="camera-recording-reset" data-defaults='{{ camera_reset_defaults|tojson }}'>Reset to defaults</button><span class="note" id="camera-recording-reset-result" role="status">Resets only Camera and recording. Review the values and press Save settings to apply.</span></div></div></details>
 
       <details class="panel setting-section"><summary>Camera profiles &amp; orientation</summary><div class="setting-content">
@@ -1428,22 +1443,51 @@ def settings():
       {% endfor %}
       <button type="submit">Save and apply camera profiles</button>
       </div></details>
-      <details class="panel setting-section"><summary>Detection profile</summary><div class="setting-content">
-      <label for="detection_profile">What to look for</label>
-      <select id="detection_profile" name="detection_profile" required>
-        <option value="general" {% if cfg.detection_profile == 'general' %}selected{% endif %}>General motion — people, objects and movement</option>
-        <option value="sky_lights" {% if cfg.detection_profile == 'sky_lights' %}selected{% endif %}>Moving sky lights — experimental</option>
-        <option value="combined" {% if cfg.detection_profile == 'combined' %}selected{% endif %}>Combined — general motion or moving sky lights</option>
-      </select>
-      <p class="note">General motion responds to changes in the image. Moving sky lights looks for compact moving bright points. Combined records when either detects activity, using the same recorder without duplicate clips. It may produce more false alerts than either mode alone.</p>
-      <div class="options">
-        <div><label for="sky_brightness">Minimum light brightness (100–250)</label><input id="sky_brightness" name="sky_brightness" type="number" min="100" max="250" value="{{ cfg.sky_brightness }}" required></div>
-        <div><label for="sky_confirm_frames">Frames required to confirm (2–8)</label><input id="sky_confirm_frames" name="sky_confirm_frames" type="number" min="2" max="8" value="{{ cfg.sky_confirm_frames }}" required></div>
-        <div><label for="sky_min_area">Minimum bright area (1–40 pixels)</label><input id="sky_min_area" name="sky_min_area" type="number" min="1" max="40" value="{{ cfg.sky_min_area }}" required></div>
-        <div><label for="sky_max_area">Maximum bright area (10–400 pixels)</label><input id="sky_max_area" name="sky_max_area" type="number" min="10" max="400" value="{{ cfg.sky_max_area }}" required></div>
-        <div><label for="sky_min_movement">Minimum movement (1–15 pixels/frame)</label><input id="sky_min_movement" name="sky_min_movement" type="number" min="1" max="15" value="{{ cfg.sky_min_movement }}" required></div>
-      </div>
-      <p class="note">Sky-light values use the small 320 × 240 analysis image, not the video resolution. Lower brightness and smaller areas detect more candidates but produce more false alerts. These controls apply to Moving sky lights and Combined.</p>
+      <details class="panel setting-section"><summary>Detection Methods &amp; Sensitivity</summary><div class="setting-content" id="detector-method-settings" data-defaults='{{ detector_defaults|tojson }}' data-presets='{{ detector_presets|tojson }}'>
+      <p class="note">Choose any combination of independent detection engines. Enabled methods share one recorder, so the same event does not create duplicate videos. New methods are OFF after an upgrade until you enable them.</p>
+      <h3>Active detection methods</h3>
+      <label class="checkline"><input type="checkbox" name="detection_methods" value="general" {% if 'general' in enabled_methods %}checked{% endif %}> General Motion — larger changes between successive frames</label>
+      <label class="checkline"><input type="checkbox" name="detection_methods" value="sky_lights" {% if 'sky_lights' in enabled_methods %}checked{% endif %}> Moving Sky Lights — cumulative motion of bright points across frames</label>
+      <label class="checkline"><input type="checkbox" name="detection_methods" value="mog2" {% if 'mog2' in enabled_methods %}checked{% endif %}> Adaptive Background (MOG2) — moving objects against a learned sky background</label>
+      <label class="checkline"><input type="checkbox" name="detection_methods" value="transient" {% if 'transient' in enabled_methods %}checked{% endif %}> Transient &amp; Streak — single-frame flashes and streaks (experimental; may cause noise alerts)</label>
+      <p class="note" id="detection-method-warning" role="alert">At least one engine must be enabled. The additional algorithms use more CPU; validate detection at night before enabling them permanently.</p>
+      <label for="detector_preset">Sensitivity preset</label>
+      <select id="detector_preset" name="detector_preset"><option value="custom" {% if cfg.detector_preset == 'custom' %}selected{% endif %}>Custom — keep individual values</option>
+      <option value="balanced" {% if cfg.detector_preset == 'balanced' %}selected{% endif %}>Balanced</option>
+      <option value="faint" {% if cfg.detector_preset == 'faint' %}selected{% endif %}>Faint Lights — higher sensitivity and more false positives</option>
+      <option value="fast" {% if cfg.detector_preset == 'fast' %}selected{% endif %}>Fast Objects — shorter confirmation and enhanced streaks</option></select>
+      <p class="note">Choosing a preset loads detection thresholds into the form. Check the values and Save settings to apply. Changing any threshold marks it Custom. Camera exposure, recording durations and detection zones are never altered by presets.</p>
+      <details class="panel setting-section"><summary>General Motion — thresholds</summary><div class="setting-content"><div class="options">
+      <div><label>Pixel difference threshold (1–255)</label><input type="number" name="pixel_threshold" min="1" max="255" value="{{ cfg.pixel_threshold }}" required></div>
+      <div><label>Changed pixels to trigger (10–10000)</label><input type="number" name="min_changed_pixels" min="10" max="10000" value="{{ cfg.min_changed_pixels }}" required></div></div>
+      <p class="note">Lower values respond to smaller changes but may trigger from noise, branches or clouds. The original three-frame general-motion confirmation remains in place.</p>
+      <button type="button" data-detect-reset="general">Reset General Motion defaults</button></div></details>
+      <details class="panel setting-section"><summary>Moving Sky Lights — thresholds</summary><div class="setting-content"><div class="options">
+      <div><label>Minimum light brightness (100–250)</label><input name="sky_brightness" type="number" min="100" max="250" value="{{ cfg.sky_brightness }}" required></div>
+      <div><label>Frames to confirm (2–8)</label><input name="sky_confirm_frames" type="number" min="2" max="8" value="{{ cfg.sky_confirm_frames }}" required></div>
+      <div><label>Minimum bright area (1–40 pixels)</label><input name="sky_min_area" type="number" min="1" max="40" value="{{ cfg.sky_min_area }}" required></div>
+      <div><label>Maximum bright area (10–400 pixels)</label><input name="sky_max_area" type="number" min="10" max="400" value="{{ cfg.sky_max_area }}" required></div>
+      <div><label>Total movement (1–15 analysis pixels)</label><input name="sky_min_movement" type="number" min="1" max="15" value="{{ cfg.sky_min_movement }}" required></div></div>
+      <p class="note">Movement is measured over the confirmed track, NOT required on every individual frame. All values are for the 320 × 240 detector image, not the MP4.</p>
+      <button type="button" data-detect-reset="sky_lights">Reset Moving Sky Lights defaults</button></div></details>
+      <details class="panel setting-section"><summary>Adaptive Background (MOG2) — thresholds</summary><div class="setting-content"><div class="options">
+      <div><label>Background variance threshold (8–100)</label><input name="mog2_threshold" type="number" min="8" max="100" value="{{ cfg.mog2_threshold }}" required></div>
+      <div><label>Minimum moving-object area (2–500 pixels)</label><input name="mog2_min_area" type="number" min="2" max="500" value="{{ cfg.mog2_min_area }}" required></div>
+      <div><label>Frames to confirm (1–8)</label><input name="mog2_confirm_frames" type="number" min="1" max="8" value="{{ cfg.mog2_confirm_frames }}" required></div></div>
+      <p class="note">The background model warms up after camera restart or changing zones. Low thresholds can detect moving clouds or sensor noise. Use with exclusion zones to reduce nearby trees.</p>
+      <button type="button" data-detect-reset="mog2">Reset MOG2 defaults</button></div></details>
+      <details class="panel setting-section"><summary>Transient &amp; Streak — thresholds</summary><div class="setting-content"><div class="options">
+      <div><label>Change brightness threshold (15–140)</label><input name="transient_threshold" type="number" min="15" max="140" value="{{ cfg.transient_threshold }}" required></div>
+      <div><label>Minimum flash area (2–100 pixels)</label><input name="transient_min_area" type="number" min="2" max="100" value="{{ cfg.transient_min_area }}" required></div>
+      <div><label>Minimum streak length (3–40 pixels)</label><input name="transient_min_length" type="number" min="3" max="40" value="{{ cfg.transient_min_length }}" required></div></div>
+      <p class="note">Examines flashes and trails in individual frames. May generate false positives from hot pixels, insects or compression noise; keep it OFF unless tested. A transient trigger does not wait for three extra frames.</p>
+      <button type="button" data-detect-reset="transient">Reset Transient defaults</button></div></details>
+      <div class="row"><button type="button" id="detection-reset-all">Reset all detection settings</button><span class="note" id="detection-reset-result" role="status">Resets detection methods and thresholds only, not camera settings or zones. Save settings to apply.</span></div>
+      <details class="panel setting-section" id="detection-diagnostics"><summary>Live Detection Diagnostics — why is nothing being recorded?</summary><div class="setting-content">
+        <p class="note">Diagnostic figures refresh while open. These reflect live 320 × 240 analysis frames; a bright 10-second photograph is not equivalent to a 200 ms monitoring frame.</p>
+        <div id="detection-live-values" role="status">Open this section to load read-only detection diagnostics.</div>
+        <p class="note">If nearly all pixels are black or white, review exposure and gain. A paused schedule, low storage, event-storm protection or a restrictive zone can prevent recording even when a candidate is detected.</p>
+      </div></details>
       </div></details>
       <details class="panel setting-section"><summary>When to detect</summary><div class="setting-content">
       <p class="note">Choose when to record. A manual Pause overrides every schedule. The camera preview remains available while detections are paused or outside the recording window.</p>
@@ -1479,16 +1523,18 @@ def settings():
       <p class="note">The still image can reveal people and private surroundings. Test outdoors first. Keep any public hostname separated and access-controlled appropriately by your reverse proxy. Public video delivery may have additional CDN restrictions.</p>
       {% if cfg.public_enabled %}<a href="{{ url_for('public_page') }}">Open the public page</a>{% else %}<p class="note">Save settings with this option enabled before the public page can be opened.</p>{% endif %}</div></details>
       <details class="panel setting-section"><summary>Detection zones — monitored and excluded areas</summary><div class="setting-content" id="zones-editor" data-csrf="{{csrf}}">
-        <p class="note">Draw rectangles or polygons directly over the latest cached camera preview. Green areas allow detections; red areas ignore triggers. The actual recordings stay full-frame and unchanged. Detection zones apply to both General Motion and Moving Sky Lights.</p>
+        <p class="note"><strong>To ignore trees or houses, use red zones ONLY.</strong> Everything outside red areas is monitored automatically; you do NOT need to draw green areas. Green areas are optional restricted monitoring zones. Saved videos remain completely full-frame. All enabled detection methods respect these masks.</p>
+        <p class="note"><strong>Polygon:</strong> single-click each corner, then press <strong>Finish shape</strong>. Do not double-click. <strong>Trace Horizon:</strong> click along the tops of the trees from left to right, then Finish shape; everything below your line is excluded. <strong>Freehand:</strong> hold and drag around an area; release to finish. Use Edit corners to drag white handles instead of redrawing.</p>
         <label class="checkline"><input id="zones-enabled" type="checkbox"> Enable custom detection zones (disabled by default)</label>
         <div class="row" style="gap:8px;align-items:end;flex-wrap:wrap">
           <div><label for="zones-type">Zone purpose</label><select id="zones-type"><option value="exclude">Ignore motion (red)</option><option value="include">Monitor only here (green)</option></select></div>
-          <div><label for="zones-tool">Drawing tool</label><select id="zones-tool"><option value="rectangle">Rectangle · drag</option><option value="polygon">Polygon · click corners</option></select></div>
-          <button type="button" id="zones-complete">Finish polygon</button><button type="button" id="zones-undo">Undo</button>
+          <div><label for="zones-tool">Drawing tool</label><select id="zones-tool"><option value="rectangle">Rectangle · drag</option><option value="polygon">Polygon · single-click corners</option><option value="horizon">Trace Horizon · single-click top edge</option><option value="freehand">Freehand · press and drag</option><option value="edit">Edit saved corners · drag handles</option></select></div>
+          <button type="button" id="zones-complete">Finish shape</button><button type="button" id="zones-undo">Undo</button><button type="button" id="zones-redo">Redo</button>
           <button type="button" id="zones-clear">Clear zones</button><button type="button" id="zones-refresh">Refresh preview</button>
         </div>
         <div class="zones-preview"><canvas id="zones-canvas" width="960" height="540" aria-label="Camera image with coloured detection zones"></canvas></div>
         <p class="note" id="zones-status" role="status">Loading saved zones and camera preview…</p>
+        <div id="zones-list" aria-label="Saved detection zones in the editor"></div>
         <p class="note">Detection zones have their own Save button. Normal Detector Settings Save does not overwrite them. The preview is a still from the active camera, not another camera connection.</p>
         <button type="button" id="zones-save">Save detection zones</button>
         <script src="{{url_for('detection_zones_js')}}" defer></script>
@@ -1539,10 +1585,13 @@ def settings():
                        active_profile=selected_profile(cfg)[0], compass_label=compass_name(cfg.get('image_top_bearing', 0)),
                        fps_options=sorted(set(capabilities['fps_options']) | {int(cfg.get('fps', 15))}),
                        camera_reset_defaults={**{key:DEFAULTS[key] for key in (
-                           'resolution','fps','pixel_threshold','min_changed_pixels',
+                           'resolution','fps',
                            'pre_motion_seconds','post_motion_seconds','max_clip_seconds')},
                            'fps':min(capabilities['fps_options'],key=lambda fps:abs(int(fps)-int(DEFAULTS['fps'])))
-                           if capabilities['fps_options'] else int(cfg.get('fps',15))})
+                           if capabilities['fps_options'] else int(cfg.get('fps',15))},
+                       enabled_methods=enabled_detection_methods(cfg),
+                       detector_defaults=__import__('detection_methods').DEFAULTS,
+                       detector_presets=DETECTION_PRESETS)
 
 
 # Accounts are stored in SQLite, so changing a password does not require sudo
@@ -3031,10 +3080,25 @@ def detection_zones_api():
     if request.method=='GET':return jsonify(read())
     if not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session.get('csrf','_')):abort(403)
     try:
-        if not request.is_json or request.content_length is None or request.content_length>16000:
+        if not request.is_json or request.content_length is None or request.content_length>60000:
             raise ValueError('Invalid detection zone request size.')
         return jsonify(write(request.get_json()))
     except (ValueError,TypeError,OSError) as exc:return jsonify(error=str(exc)[:180]),400
+
+@app.route('/api/detection-diagnostics')
+def detection_diagnostics_api():
+    if not is_admin():abort(403)
+    from detector_diagnostics import PATH
+    try:
+        data=json.loads(PATH.read_text())
+        if not isinstance(data,dict):raise ValueError('Invalid diagnostics.')
+        return jsonify(data)
+    except (OSError,ValueError):return jsonify(error='Detector has not published diagnostics yet.'),503
+
+@app.route('/assets/detection-settings.js')
+def detection_settings_js():
+    if not is_admin():abort(403)
+    return send_file(Path(__file__).with_name('detection_settings.js'),mimetype='application/javascript',max_age=3600)
 
 @app.route('/assets/detection-zones.js')
 def detection_zones_js():

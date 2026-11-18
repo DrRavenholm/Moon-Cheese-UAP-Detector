@@ -10,7 +10,7 @@ from common import DATA
 
 PATH=DATA/'detection-zones.json'
 MAX_ZONES=24
-MAX_POINTS=36
+MAX_POINTS=256
 
 
 def validate(raw):
@@ -23,7 +23,7 @@ def validate(raw):
             raise ValueError('Choose a monitoring or exclusion zone.')
         points=z.get('points',[])
         if not isinstance(points,list) or not 3<=len(points)<=MAX_POINTS:
-            raise ValueError('Each detection polygon requires 3–36 vertices.')
+            raise ValueError('Each detection polygon requires 3–256 vertices.')
         normal=[]
         for p in points:
             if not isinstance(p,list) or len(p)!=2 or not all(type(a) in (int,float) and 0<=a<=1 for a in p):

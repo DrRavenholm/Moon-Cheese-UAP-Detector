@@ -23,10 +23,12 @@ RESOLUTIONS = {
 
 DEFAULTS = {
     'fps': 15, 'resolution': '1280x720',
-    'detection_profile': 'general', 'sky_brightness': 180,
+    'detection_profile': 'general', 'detection_methods': None, 'detector_preset': 'custom', 'sky_brightness': 180,
     'sky_min_area': 2, 'sky_max_area': 100,
     'sky_confirm_frames': 3, 'sky_min_movement': 2,
     'pixel_threshold': 32, 'min_changed_pixels': 65,
+    'mog2_threshold':24, 'mog2_min_area':6, 'mog2_confirm_frames':2,
+    'transient_threshold':45, 'transient_min_area':2, 'transient_min_length':7,
     'pre_motion_seconds': 5, 'post_motion_seconds': 5, 'max_clip_seconds': 300,
     # Destructive clean-up is opt-in; reviewed/flagged entries are always protected.
     'cleanup_enabled': False, 'retention_new_days': 60,

@@ -66,17 +66,21 @@ class SkyLightTracker:
                     continue
                 dx, dy = x - track['x'], y - track['y']
                 d2 = dx * dx + dy * dy
-                if self.min_movement * self.min_movement <= d2 <= best_dist_sq:
+                if d2 <= best_dist_sq:
                     best_dist_sq = d2
                     matched = i
             if matched is not None:
                 used.add(matched)
                 count_hits = prior[matched]['hits'] + 1
+                origin_x,origin_y = prior[matched]['origin_x'],prior[matched]['origin_y']
             else:
                 count_hits = 1
-            updated.append({'x': x, 'y': y, 'hits': count_hits})
+                origin_x,origin_y=x,y
+            total_displacement=((x-origin_x)**2+(y-origin_y)**2)**.5
+            updated.append({'x': x, 'y': y, 'hits': count_hits, 'origin_x':origin_x,
+                            'origin_y':origin_y, 'travel':total_displacement})
         self.tracks = updated
         cv2.accumulateWeighted(gray, self.background, 0.035)
-        confirmed = any(t['hits'] >= self.confirm_frames for t in updated)
+        confirmed = any(t['hits'] >= self.confirm_frames and t['travel'] >= self.min_movement for t in updated)
         score = sum(area for _, _, area in blobs)
         return confirmed, score

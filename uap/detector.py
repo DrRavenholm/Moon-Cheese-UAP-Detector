@@ -20,7 +20,10 @@ from storm_events import activated as storm_activated, recovered as storm_recove
 from motion_logic import ClipPlanner
 from sky_tracking import SkyLightTracker
 from motion_logic import detection_decision
-from trigger_logic import source_for_trigger
+from trigger_logic import combined_source, SOURCE_LABELS
+from detection_methods import selected as enabled_methods
+from advanced_detection import AdaptiveBackground, TransientDetector
+from detector_diagnostics import publish as publish_diagnostics
 from hardware import capture_capabilities
 from scheduling import detection_window
 from camera_profiles import selected_profile, effective_slot, camera_controls
@@ -69,16 +72,19 @@ def run_camera(settings):
     storm.set_config(settings)
     storm_notification_id = None
     storm_cooling_before = False
-    profile = settings.get('detection_profile', 'general')
-    if profile not in ('general', 'sky_lights', 'combined'):
-        raise ValueError('Unrecognised detection profile')
+    methods = enabled_methods(settings)
+    profile = settings.get('detection_profile', 'general')  # Old event labels retained.
     sky_tracker = (SkyLightTracker(
         brightness=int(settings.get('sky_brightness', 180)),
         min_area=int(settings.get('sky_min_area', 2)),
         max_area=int(settings.get('sky_max_area', 100)),
         confirm_frames=int(settings.get('sky_confirm_frames', 3)),
         min_movement=int(settings.get('sky_min_movement', 2)))
-        if profile in ('sky_lights', 'combined') else None)
+        if 'sky_lights' in methods else None)
+    adaptive = (AdaptiveBackground(settings.get('mog2_threshold',24), settings.get('mog2_min_area',6),
+                                   settings.get('mog2_confirm_frames',2)) if 'mog2' in methods else None)
+    transient = (TransientDetector(settings.get('transient_threshold',45), settings.get('transient_min_area',2),
+                                   settings.get('transient_min_length',7)) if 'transient' in methods else None)
     selected_slot, selected_cfg = selected_profile(settings)
     camera = Picamera2()
     allowed_controls = camera.camera_controls
@@ -97,6 +103,10 @@ def run_camera(settings):
     previous = None
     last_preview = 0
     last_heartbeat = 0
+    last_diagnostics = 0
+    last_analysis_time = None
+    diagnostics_counts = {'frames':0,'events_started':0,'candidate_general':0,
+                          'candidate_sky_lights':0,'candidate_mog2':0,'candidate_transient':0}
     recording = False
     filename = None
     thumbnail = None
@@ -162,8 +172,9 @@ def run_camera(settings):
             # Allow the pre-roll buffer to refill entirely with ordinary footage.
             suppress_detection_until=last_preview+pre+1
             previous=None
-            if sky_tracker is not None:
-                sky_tracker.clear()  # start tracking from a clean observation
+            if sky_tracker is not None: sky_tracker.clear()
+            if adaptive is not None: adaptive.clear()
+            if transient is not None: transient.clear()
 
 
     def begin_clip(now, *, part_of_same_motion=False, source=''):
@@ -180,6 +191,7 @@ def run_camera(settings):
         cv2.imwrite(str(thumbnail), latest_frame)
         circular.open_output(PyavOutput(str(filename)))
         recording = True
+        diagnostics_counts['events_started']+=1
         storm.start(now)
         highest = 0
         trigger_source = source
@@ -194,7 +206,7 @@ def run_camera(settings):
         storm.finish(time.monotonic())
         # Closing the output writes the MP4 index. Only save valid files.
         if filename.is_file() and filename.stat().st_size > 0:
-            label = {'general':'Motion detected', 'sky_lights':'Moving light detected', 'combined':'Motion / light detected'}[profile]
+            label = SOURCE_LABELS.get(trigger_source, 'Motion / light detected')
             title = label if part == 1 else f'{label} (part {part})'
             event_id = add_event(title, video=filename.name,
                                  thumbnail=thumbnail.name if thumbnail.is_file() else None,
@@ -351,6 +363,8 @@ def run_camera(settings):
                 last_zone_version=zone_version
                 previous=None
                 if sky_tracker is not None:sky_tracker.clear()
+                if adaptive is not None:adaptive.clear()
+                if transient is not None:transient.clear()
             analysis_frame=cv2.bitwise_and(latest_frame,latest_frame,mask=detection_mask)
             gray = cv2.bitwise_and(cv2.GaussianBlur(analysis_frame, (5, 5), 0),detection_mask)
             if now < suppress_detection_until:
@@ -365,43 +379,70 @@ def run_camera(settings):
                 planner.last_motion = None
                 planner.segment_started = None
                 previous = None
-                if sky_tracker is not None:
-                    sky_tracker.clear()
+                if sky_tracker is not None: sky_tracker.clear()
+                if adaptive is not None: adaptive.clear()
+                if transient is not None: transient.clear()
                 try: storm_notification_id = storm_activated(storm.cooldown_seconds)
                 except Exception: LOG.exception('Could not log storm activation')
                 storm_cooling_before = True
                 write_status('storm', 'Event-storm protection: too much continuous motion; temporarily cooling down')
                 last_heartbeat = now
+            scores = {name:0 for name in methods}
+            candidates = {name:False for name in methods}
             if previous is not None:
-                general_detected, general_score = False, 0
-                sky_detected, sky_score = False, 0
-                if profile in ('general', 'combined'):
-                    mask = cv2.threshold(cv2.absdiff(previous, gray),
+                if 'general' in methods:
+                    diff = cv2.threshold(cv2.absdiff(previous, gray),
                                          int(settings.get('pixel_threshold', 32)),
                                          255, cv2.THRESH_BINARY)[1]
-                    general_score = int(cv2.countNonZero(mask))
-                    general_detected = general_score >= int(settings.get('min_changed_pixels', 65))
+                    scores['general'] = int(cv2.countNonZero(diff))
+                    candidates['general'] = scores['general'] >= int(settings.get('min_changed_pixels', 65))
                 if sky_tracker is not None:
-                    sky_detected, sky_score = sky_tracker.feed(analysis_frame)
-                moving = (record_allowed and not low_disk and not storm.cooling(now) and
-                          detection_decision(profile, general_detected, sky_detected))
-                score = max(general_score, sky_score)
-                source = source_for_trigger(profile, general_detected, sky_detected)
+                    candidates['sky_lights'], scores['sky_lights'] = sky_tracker.feed(analysis_frame)
+                if adaptive is not None:
+                    candidates['mog2'], scores['mog2'] = adaptive.feed(gray,detection_mask)
+                if transient is not None:
+                    candidates['transient'], scores['transient'] = transient.feed(gray,detection_mask)
+                allowed = record_allowed and not low_disk and not storm.cooling(now) and now >= suppress_detection_until
+                active = any(candidates.values())
+                moving = bool(allowed and active)
+                score = max(scores.values(), default=0)
+                source = combined_source(candidates)
                 if moving and recording:
-                    highest = max(highest, score)
-                action = planner.feed(now, moving)
+                    highest = max(highest,score)
+                # Sky-light tracking and MOG2 already perform their own multi-frame
+                # confirmation; a single bright streak must not require three more.
+                confirmed = any(candidates.get(k,False) for k in ('sky_lights','mog2','transient'))
+                action = planner.feed(now,moving,confirmed=confirmed)
                 if action == 'start':
-                    begin_clip(now, source=source)
-                    highest = score
+                    begin_clip(now,source=source)
+                    highest=score
                 elif action == 'stop':
                     finish_clip()
                 elif action == 'rollover':
-                    # Long uninterrupted events continue immediately as the
-                    # next clip; we never wait for a fresh motion trigger.
                     finish_clip()
-                    begin_clip(now, part_of_same_motion=True, source=source)
-                    highest = score
+                    begin_clip(now,part_of_same_motion=True,source=source)
+                    highest=score
             previous = gray
+            diagnostics_counts['frames']+=1
+            for method,flag in candidates.items():
+                if flag:diagnostics_counts['candidate_'+method]+=1
+            if now - last_diagnostics >= 4:
+                last_diagnostics=now
+                if not cv2.countNonZero(detection_mask):reason='No pixels available: review detection zones'
+                elif low_disk: reason='Storage low: recordings suspended'
+                elif storm.cooling(now): reason='Event-storm protection cooldown'
+                elif not record_allowed: reason=schedule_reason
+                elif now < suppress_detection_until: reason='Camera pre-roll refilling'
+                elif recording: reason='Recording an event'
+                elif any(candidates.values()): reason='Candidate detected; waiting for recording confirmation'
+                else: reason='No candidate met the active detection thresholds'
+                active_pixel_fraction=float(cv2.countNonZero(detection_mask))/(w*h)
+                measured_fps=1/(now-last_analysis_time) if last_analysis_time and now>last_analysis_time else fps
+                try:
+                    publish_diagnostics(latest_frame,methods,scores,candidates,record_allowed,
+                                        reason,recording,active_pixel_fraction,measured_fps,diagnostics_counts)
+                except OSError:LOG.warning('Could not publish detection diagnostics')
+            last_analysis_time=now
             # Read new settings without requiring commands or sudo from the web app.
             # Delay camera restart until the current motion session finishes.
             if now - last_settings_check >= 3:
@@ -409,7 +450,9 @@ def run_camera(settings):
                 newest = SETTINGS.stat().st_mtime_ns if SETTINGS.exists() else 0
                 if newest != settings_version:
                     new_cfg = read_config()
-                    camera_keys = ('fps', 'resolution', 'detection_profile', 'sky_brightness',
+                    camera_keys = ('fps', 'resolution', 'detection_profile', 'detection_methods', 'detector_preset', 'mog2_threshold',
+                                   'mog2_min_area','mog2_confirm_frames','transient_threshold',
+                                   'transient_min_area','transient_min_length','sky_brightness',
                                    'sky_min_area', 'sky_max_area', 'sky_confirm_frames',
                                    'sky_min_movement', 'pixel_threshold', 'min_changed_pixels',
                                    'pre_motion_seconds', 'post_motion_seconds', 'max_clip_seconds',
@@ -436,7 +479,7 @@ def run_camera(settings):
                 finally:
                     recording = False
                     if filename and filename.is_file() and filename.stat().st_size > 0:
-                        label = {'general':'Motion detected', 'sky_lights':'Moving light detected', 'combined':'Motion / light detected'}[profile]
+                        label = SOURCE_LABELS.get(trigger_source, 'Motion / light detected')
                         title = label if part == 1 else f'{label} (part {part})'
                         add_event(title, video=filename.name,
                                   thumbnail=thumbnail.name if thumbnail and thumbnail.is_file() else None,

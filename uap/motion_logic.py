@@ -18,14 +18,14 @@ class ClipPlanner:
     last_motion: float | None = None
     segment_started: float | None = None
 
-    def feed(self, now: float, is_motion: bool) -> str | None:
+    def feed(self, now: float, is_motion: bool, *, confirmed: bool = False) -> str | None:
         """Return 'start', 'stop', 'rollover', or None.
 
         'rollover' means finish the current output and immediately open another;
         the motion session remains active. The next output is not a new trigger.
         """
         if is_motion:
-            self.hits += 1
+            self.hits = max(self.hits + 1, self.trigger_frames) if confirmed else self.hits + 1
             if self.active:
                 self.last_motion = now
         else:

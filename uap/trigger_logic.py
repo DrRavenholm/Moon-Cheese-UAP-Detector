@@ -21,3 +21,13 @@ def source_for_trigger(profile, general_detected, sky_detected):
         if sky_detected:
             return 'sky_lights'
     return ''
+
+METHOD_LABELS={'general':'General motion','sky_lights':'Moving sky lights',
+               'mog2':'Adaptive background','transient':'Transient / streak'}
+from itertools import combinations
+for size in range(1,len(METHOD_LABELS)+1):
+    for group in combinations(METHOD_LABELS,size):
+        SOURCE_LABELS['+'.join(group)]=' + '.join(METHOD_LABELS[k] for k in group)
+
+def combined_source(candidates):
+    return '+'.join(k for k in METHOD_LABELS if candidates.get(k))
