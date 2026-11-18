@@ -1,120 +1,93 @@
 # Moon Cheese UAP Detector
 
-**An open-source, camera-based sky-monitoring, recording and investigation system for Raspberry Pi.**
+**Open-source sky monitoring, automatic detection, photography and investigation for Raspberry Pi.**
 
-Moon Cheese UAP Detector combines automatic camera monitoring with tools to capture, organise and examine unusual motion or lights in the sky. It is designed for enthusiasts and independent researchers who want to keep the original recordings available for closer investigation.
+Moon Cheese watches a connected camera for movement and moving points of light, saves event recordings with pre-event footage, and provides tools to review the evidence. You can also take full-resolution photographs, schedule videos and time-lapses, explore offline-first Sky Maps, and choose which observations to share publicly.
 
-A detection is **not** identification, and Moon Cheese does not claim to prove that any recorded object or event is unexplained.
+**An event is an observation, not proof of a UAP.** Moon Cheese does not automatically identify an aircraft, satellite or unexplained object; astronomical maps provide predictions to help investigations.
 
-> **Current prepared release: v1.0.1.4 (Detection reliability and zone editor update).** Moon Cheese v1.0.0 was publicly released on 7 November 2026. v1.0.1.2 introduces downloadable offline-first Sky Maps, a full-screen-compatible but not yet OBS-specific two-map explorer, per-dataset management, event-time mapping, configurable detection zones and updated Service Repair and Photography progress. The Photography countdown and event-time links were reported working on the Pi in v1.0.1.2; Sky Maps search and ephemeris accuracy require ongoing live acceptance; v1.0.1.4 adds independent MOG2/transient detectors and improved diagnostics that require night-time Raspberry Pi acceptance.
+## Quick install
 
-## Install Moon Cheese
-
-### One-line installation — latest stable release
-
-Install the latest published stable Moon Cheese release on a supported Raspberry Pi OS system with:
+On a supported Raspberry Pi running **64-bit Raspberry Pi OS**, with a compatible camera and internet access for installation, open a terminal and run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
 ```
 
-The bootstrap downloads the latest **stable** GitHub Release's complete Moon Cheese installation archive, checks the SHA-256 asset digest, validates the archive structure, then runs the archive's original `install.sh`. It is designed for clean installations as well as existing-installation upgrades; the main installer retains responsibility for backups and service setup.
-
-**This command selects the latest stable release** and does not require a GitHub account or access token. The stable installation path has been tested on Raspberry Pi hardware; check the v1.0.1.4 release notes for its specific acceptance status.
-
-### One-line installation — public prerelease testing
-
-The previous anonymous GitHub fresh-install test **passed** using this exact public v0.9.9.5.3 prerelease command on a clean Raspberry Pi:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
-```
-
-This uses the **same bootstrap**, checksum checks and packaged installer as the stable command; the flag selects a specific public prerelease instead of GitHub's latest stable release. **No GitHub login, token, PC download or manual file transfer is required.**
-
-Prereleases remain available for testing. They do not substitute for final acceptance of the stable v1.0.0 release.
-
-### Find your administrator password after installation
-
-If you closed PuTTY or the terminal before noting the initial credentials, open a terminal on the Raspberry Pi and run:
+**To retrieve your original generated administrator username and password**, including after closing the installation terminal:
 
 ```bash
 sudo uapctl credentials
 ```
 
-**This is the command to retrieve the original generated administrator username and password.** If you subsequently changed the password, sign in with the new one instead. Keep these credentials private. The installer also prints this command clearly at completion.
+The command displays the **original** password only. If you changed that password after installation, continue using your new password. Do not share administrator credentials. The installer displays how to reach the dashboard when setup completes.
 
-### Cloudflare Tunnel setup
-
-For optional public HTTPS access without port forwarding, open **Administration → System Administration → Network and remote access → Cloudflare Tunnel**, then expand **Cloudflare setup guide**. It explains exactly how to create your own restricted token, choose **Account → Cloudflare Tunnel → Edit**, **Zone → DNS → Edit** and **Zone → Zone → Read**, limit the token to your account/domain and locate the Account ID and Zone ID. Never share your API token or use a Global API Key. Cloudflare Error 1033 means the connector is not healthy; see the in-app guide for safe checks.
-
-### Existing installation service repair
-
-To reassert Moon Cheese's own required services after configuration conflicts or service failures, open **Administration → System Health → Software updates**. **Repair services is always available** to administrators, even if unit files match. Enter your current administrator password, explicitly acknowledge that monitoring will be interrupted, and press Repair services. The root-owned maintenance worker backs up and reinstalls official Moon Cheese-owned systemd unit definitions, reloads systemd, re-enables its required service/timer/path units, and restarts the Moon Cheese detector and dashboard. It does not stop or disable third-party applications, and it preserves the enabled/disabled state of optional Cloudflare/DDNS features. A successful service-file check **does not** prove that the camera is healthy or that another application is not occupying it.
-
-From PuTTY, read-only inspection remains available:
-
-```bash
-sudo python3 /opt/uap-detector/uap/service_repair.py --check
-```
-
-A backed-up service-file-only restore **without restarting** is still available via `--apply`. The fully active operation is `sudo python3 /opt/uap-detector/uap/service_repair.py --full-reset`. Use the dashboard's password-protected action where possible.
-
-### New Sky Maps menu and astronomical data
-
-**Sky Maps → Explore Sky Maps** displays a linked local-sky chart and Earth satellite map. Search objects, choose local-sky and Earth layers, pick a date/time, play the timeline at selectable speeds and use **Reset to Now**. On a saved observation, select **View sky at this event** to open its recorded moment. These are predicted positions, not automatic identification of an observation.
-
-**Sky Maps → Data & Updates** is administrator-only. The first time you install this version, open **All astronomical data** and choose **Download all missing data**. The Pi must have internet access for this initial download. Astronomical data is stored under `/var/lib/uap-detector/sky-map-data` and is **not** included in the release archive. Stars, constellation names and boundaries, JPL planet/Moon/Sun ephemeris, Earth outlines, optional deep-sky objects and satellites are downloaded individually; all except satellites need only occasional intentional updates. Satellites use keyless CelesTrak OMM/CSV orbital data and an administrator-configurable **daily local download time**. Provider errors suspend automatic satellite requests until a manual retry, subject to the cooldown. No external web maps or paid keys are needed. The detector continues operating if the internet, catalogues or prediction engine are unavailable. The world map currently downloads its compact outline as part of the first-run setup too.
-
-**Detector Settings → Detection Zones** allows administrators to draw rectangles or polygons over the last saved camera preview. Include zones limit triggering to selected areas; exclusions suppress unwanted activity. Save Zones separately from ordinary camera settings. Masks affect triggering in both detector modes, **never crop video or photos**, and default to full-frame unless enabled.
-
-Aircraft tracking and a dedicated 16:9 OBS studio are **not part of this release**.
-
-The administrator **Photography** page (formerly Live Camera) captures full-resolution stills, including manual long exposures with persistent preparation, exposure, saving and restoration stages. The header colour icon opens Blue, Red, Green and Cheese Yellow choices for all visitors.
-
-See [Installation and requirements](docs/INSTALLATION.md) for more information.
+The one-line command installs the **latest published stable GitHub Release**, not necessarily the newest source commit. It does not require a GitHub account, API token, paid subscription or separate download of the program. Read the [installation guide](docs/INSTALLATION.md) for hardware requirements, upgrade details and optional version-pinned prerelease testing.
 
 ## What Moon Cheese does
 
-- **Offline-first Sky Maps:** linked local celestial and Earth satellite maps, expandable data downloads, search, timeline, and observation-time viewing.
-- **Detection Zones:** monitored/excluded camera preview areas, without cropping original recordings.
-- **Automatic sky monitoring:** camera analysis for movement, bright moving lights, or combined events, with configurable day/night and custom settings.
-- **Record and investigate:** retained MP4 observations, notes, classification, pinning, frame-by-frame inspection, playback controls, image enhancement and still-frame export.
-- **Full-resolution photography:** capture and review photographs from the connected camera.
-- **Scheduled Video and Time-lapse Studio:** plan recordings and time-lapses, review finished videos, and manage source material.
-- **Observation management:** dashboard, galleries, calendar, storage protections and administrative approval for public sharing.
-- **Notifications:** user-configurable email, Web Push and observation reports.
-- **System administration:** protected user accounts, system health, backups, and optional network features such as Cloudflare Tunnel, DNS/DDNS and reverse-proxy integration.
-- **In-app software maintenance:** administrator-controlled Check for updates, Update now and Repair current version. Update and Repair require the signed-in administrator's current password.
+| Feature | Description |
+| --- | --- |
+| **Automatic sky detection** | General Motion, tracked Moving Sky Lights, optional Adaptive Background (MOG2), and experimental Transient & Streak detection. Choose the methods independently and configure sensitivity. |
+| **Event recordings** | Records original MP4 footage with configurable pre- and post-event intervals, duration limits, notifications and storage protections. |
+| **Detection Zones** | Draw red exclusions for buildings and trees, or optional green monitoring areas. Trace Horizon helps exclude everything below the skyline. Original recordings remain full frame. |
+| **Photography** | Full-resolution still photographs, manual exposure and gain controls, progress countdown, image review and original-file downloads. |
+| **Scheduled capture** | Planned video recordings and full-resolution Time-lapse Studio, with advanced photography settings and estimated capture completion time. |
+| **Sky Maps** | Linked local sky and Earth satellite maps, searching, layers, time controls, object predictions and View sky at this event. |
+| **Investigations** | Event search, notes, status labels, frame inspection, export, galleries and calendar. Preserve originals for comparison. |
+| **Remote access and sharing** | Optional Cloudflare Tunnel, DNS and reverse proxy features; opt-in public observation page with per-item sharing. |
+| **Administration** | Multi-user accounts, email/Web Push, backup/restore, system health, update/repair, and detector diagnostics with seven-day reports. |
 
-Moon Cheese includes contextual Help and a full in-app Version History. Network features are optional; the detector can be used on a local network.
+Moon Cheese is **offline-first for monitoring and recording**. Optional network services need internet access. Sky Maps uses local astronomical data after its initial download; satellite predictions become less dependable as cached orbital elements age.
 
-## Hardware and release status
+### Detection quality and night photography
 
-**Primary reference platform:** Raspberry Pi 4 running supported 64-bit Raspberry Pi OS, with compatible camera hardware. GitHub upgrades, the previous private repair, and an anonymous one-line prerelease fresh installation have been tested successfully on Raspberry Pi hardware.
+The detector analyses short video frames; a bright ten-second time-lapse exposure is **not** equivalent to a frame captured at 5, 15 or 24 frames per second. Higher exposure, gain, sensitivity or analysis resolution may improve faint-object detection but can also create motion blur, sensor noise and false alarms. Moon Cheese supports adjustable analysis resolution and exposure/gain profiles; test changes on your actual camera. A selectable ISO-*equivalent* shortcut uses analogue gain (approximately ISO 100 at 1× digital gain), while measured ISO-equivalent readings depend on both analogue and digital gain. This is not a separately calibrated DSLR ISO control.
 
-Raspberry Pi 5, Pi Zero 2 W / Raspberry Pi OS Lite, and other compatible Debian-based single-board computers have experimental installer support but **have not all passed real-hardware acceptance tests**. Camera capabilities and available frame rates depend on the exact sensor and system.
+## Getting started after installation
 
-## Documentation
+1. Open the local dashboard address printed by the installer and sign in with your administrator credentials.
+2. Check **Administration → Detector Settings** for the correct camera mode, orientation, sensitivity and recording schedule. Keep the original settings until you understand how the camera behaves.
+3. If you want to ignore a treeline or road, use **Detection Zones** and save the red exclusion separately from detector settings.
+4. Open **Sky Maps → Data & Updates** and select **Download all missing data** when connected to the internet. Astronomical catalogues are **not** bundled in every release.
+5. Use **Observations** to review captured events, their original MP4s and the sky at the recorded time. Public sharing is optional and off by default.
 
-- [Install Moon Cheese and test a public prerelease](docs/INSTALLATION.md)
-- [Release history](CHANGELOG.md)
-- [Publishing and verifying releases](docs/RELEASING.md)
+### Supported hardware
+
+**Raspberry Pi 4 running 64-bit Raspberry Pi OS with a compatible camera** is the primary reference system. Supported frame rates and manual camera controls depend on the sensor and system. Pi 5, Pi Zero 2 W, some Raspberry Pi OS Lite configurations and other Debian-based boards have experimental or incompletely verified support; they should not be assumed to work identically without testing. Internet access is needed for initial installation and optional sky-data updates, but is not needed for ordinary local detection.
+
+## Updates, repairs and troubleshooting
+
+For an existing installation, use **Administration → System Health → Software updates** to check for new stable releases. Update and Repair current version require the signed-in administrator's **current** password. Normal releases preserve configuration, accounts, stored astronomical data, network state, databases and recordings; review backups before maintenance on an active installation.
+
+**Repair services** is a separate administrator-authorised service restoration operation. It can interrupt the active camera and restart Moon Cheese-owned services; it never intentionally stops unrelated third-party applications. Do not invoke it in the middle of an important scheduled recording.
+
+If nothing is recorded, check the detector's status, event-storm protection, schedule, camera exposure/gain, detection zones and **Live Detection Diagnostics**. The latter includes recorded minute-by-minute summaries and CSV exports for the previous seven days after upgrading to v1.0.1.5. Adjust high-sensitivity detection modes experimentally; more events do not necessarily mean more genuine objects.
+
+Optional Cloudflare Tunnel setup is documented in the application's **Cloudflare setup guide**, including the scoped Account/Zone token permissions. Never publish Cloudflare credentials or tokens.
+
+## Roadmap and documentation
+
+- [Installation and detailed setup](docs/INSTALLATION.md)
+- [Current feature roadmap](docs/PROJECT_ROADMAP.md)
+- [Changes in each release](CHANGELOG.md) and [full Version History](VERSION_HISTORY.md)
 - [Software updates and repair](docs/UPDATES_PLAN.md)
-- [v1.0 readiness and later roadmap](docs/PROJECT_ROADMAP.md)
-- [Security and vulnerability reports](SECURITY.md)
+- [Publishing matching GitHub source and release assets](docs/RELEASING.md)
+- [Security policy](SECURITY.md)
+- [Third-party attribution](THIRD_PARTY_NOTICES.md)
 
-## Creator and project
+### Development direction
 
-Created by **Dr Ravenholm**, the person behind [Transparent-Aluminium.net](https://transparent-aluminium.net/).
+Current development focuses on making the detector reliable against real night-sky footage, validating higher-resolution analysis on Raspberry Pi hardware, improving camera calibration and object interpretation, and refining the user interfaces. **Future features are not part of the current release:** optional internet-based aircraft tracking, a dedicated 16:9 OBS-ready presentation interface, and multi-detector collaboration. See the [roadmap](docs/PROJECT_ROADMAP.md) for implementation status.
 
-- [Project repository](https://github.com/DrRavenholm/Moon-Cheese-UAP-Detector)
-- [Creator website](https://transparent-aluminium.net/)
-- [Blog](https://transparent-aluminium.net/blog/)
-- [YouTube](https://www.youtube.com/@Dr_Ravenholm) · [Twitch](https://www.twitch.tv/dr_ravenholm) · [Discord](https://discord.gg/yTj2ucM)
+## Creator and community
 
-## Licence and source
+Created by **Dr Ravenholm**, behind [Transparent-Aluminium.net](https://transparent-aluminium.net/).
 
-Moon Cheese UAP Detector is distributed under the **GNU General Public License v3.0**. See [`LICENSE`](LICENSE) and the attribution notices accompanying the application.
+[Project on GitHub](https://github.com/DrRavenholm/Moon-Cheese-UAP-Detector) · [Website](https://transparent-aluminium.net/) · [Blog](https://transparent-aluminium.net/blog/) · [YouTube](https://www.youtube.com/@Dr_Ravenholm) · [Twitch](https://www.twitch.tv/dr_ravenholm) · [Discord](https://discord.gg/yTj2ucM)
 
-The official versioned `.tar.gz` is both the **full installation package and the complete matching source snapshot**. It contains the public GitHub landing page, `docs/`, the bootstrap script, the full `uap/`, `systemd/` and `npm/` source, licence and third-party notices, plus the internal checksums. The main installer installs only the runtime components it needs; repository pages are included for source parity. The maintainer updates the GitHub Code page **from that same extracted archive**, in batches if needed, before creating a release tag. The tag must point to that exact source commit. GitHub's automatically generated source downloads are distinct from the versioned installation asset.
+## Licence and source integrity
+
+Moon Cheese UAP Detector is distributed under the **GNU General Public License v3.0**; see [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Each official versioned `.tar.gz` asset contains **the complete installable release and matching public GitHub source**: the installer, the `uap/` source, service units, documentation and internal checksums. The maintainer publishes matching source commits first and tags that commit when creating the stable GitHub Release. The release's **external `SHA256SUMS`** verifies the uploaded archive; it is not a publisher signature. GitHub's automatically generated source archives are separate from the official installer asset.

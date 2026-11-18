@@ -1,3 +1,17 @@
+## v1.0.1.5 — Detector Diagnostics, Camera Controls and Documentation
+**Date:** 18 November 2026
+
+- Corrected camera frame-rate validation: only the active manual profile is checked, or both Day/Night profiles when sunrise/sunset switching is selected. Inactive Custom profiles keep their saved exposure/gain and no longer block unrelated changes. Failed submissions no longer carry a misleading saved banner.
+- Added opt-in 640×360 / 640×480 higher-detail detector analysis and kept 320×240 as the upgrade default. Higher modes require matching recording aspect ratio; area and movement thresholds scale from the original reference size. Pi CPU and detection accuracy require real-world testing.
+- Replaced raw JSON diagnostics on the settings page with named per-engine method rows, configured/measured frame rates, monitoring state, brightness, exposure and gain/ISO-equivalent readouts when supported by camera metadata.
+- Added local SQLite minute-by-minute diagnostic history with seven-day retention, historical UTC-day chart and administrator-only CSV export. Old nights cannot be reconstructed from earlier overwritten diagnostic snapshots; no images are stored in history.
+- Added administrator-selectable standard, balanced and detailed preview JPEG quality without altering recorded MP4s, camera exposure or the original image streams.
+- Added linked ISO-*equivalent* shortcuts in camera profiles, Photography and advanced Time-lapse. Analogue gain remains the underlying control; an approximate ISO equals analogue × digital gain × 100 where metadata provides both. This is not separately calibrated hardware ISO.
+- Added a Time-lapse scheduler capture-completion estimate that updates as start time and duration change, using the detector timezone and its existing DST validation. Rendering/archiving takes additional time.
+- Rewrote the public README with a clear product introduction and the stable installer followed immediately by `sudo uapctl credentials`. Replaced the outdated Roadmap and cleaned up the Installation guide. Historic release details remain available in Version History.
+- Preserved accounts, media, settings, cached astronomical data, camera ownership and existing network services. No aircraft integration, OBS streaming or dew-heater GPIO is enabled.
+- **Acceptance:** source/syntax and isolated checks do not prove the actual high-resolution detector throughput or Picamera2 camera metadata on every Raspberry Pi; verify on reference hardware.
+
 ## v1.0.1.4 — Detection Reliability, Settings and Zone Editor
 **Date:** 18 November 2026
 

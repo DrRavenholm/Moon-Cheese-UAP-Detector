@@ -1,33 +1,48 @@
-# Moon Cheese UAP Detector — v1.0.1.1 Maintenance and Roadmap
+# Moon Cheese UAP Detector — Project Roadmap
 
-**Current prepared maintenance release: v1.0.1.1 (14 November 2026).** The user confirmed that v1.0.0 was published as stable and upgraded/repaired successfully on the original Pi, while the public anonymous installer succeeded for a separate test installation. v1.0.1.1 focuses on theme presentation, protected service-file repair, and Photography exposure progress; its final physical acceptance remains pending. Delivery History and SMTP diagnostics were addressed in v1.0.1, with real-world provider tests still outstanding.
+**Updated for v1.0.1.5 · 18 November 2026**
 
-## Implemented and physically confirmed on Raspberry Pi
+This roadmap distinguishes working features from features under development or proposed. It is not a troubleshooting diary, release validation report or promise of completion dates. For individual shipped changes, see [CHANGELOG](../CHANGELOG.md) and [VERSION_HISTORY](../VERSION_HISTORY.md).
 
-- Camera-based sky monitoring, recording, photography and web dashboard are established; Scheduled Video and Time-lapse Studio remain distinct observation tools.
-- Observation review, MP4 investigations/fullscreen, direct PNG frame exports, five-tab Storage Management, email/Web Push, user accounts and optional sharing are implemented.
-- NPM/Cloudflare/DDNS, Tunnel hostname changes and Wi-Fi enable/disable were tested in the earlier release series; all source code is retained.
-- Private GitHub v0.9.9.5.1 → v0.9.9.5.2 upgrade, in-app Check for updates and same-version Repair passed on the user's Pi.
-- GitHub upgrade to v0.9.9.5.3 and the redesigned About Moon Cheese page passed user acceptance.
-- A public, anonymous version-pinned prerelease installation of v0.9.9.5.3 from a clean SD card **passed**; no GitHub login, token or manual PC transfer was required.
-- Entering a deliberately incorrect administrator password produced **Denied** in v0.9.9.5.3.
+## Implemented in the current release
 
-## v1.0.1.1 acceptance
+- Raspberry Pi camera-based monitoring and automatic event recording with configurable pre-roll, event duration, schedules, manual camera profiles and saved MP4s.
+- Independently selectable General Motion, Moving Sky Lights, MOG2 Adaptive Background, and experimental Transient & Streak detectors. Detection sensitivity presets, reset controls and editable detection zones including Trace Horizon.
+- Detector diagnostics, including gain/exposure readings where supplied by the camera, a live status panel and a bounded seven-day minute-summary history with CSV download.
+- Configurable 320×240 or appropriately aspect-matched 640×360 / 640×480 detector analysis. Performance and sensitivity at high resolution still need actual Pi benchmarking.
+- Photography, long-exposure progress, full-resolution image download, browser investigation tools and gain/ISO-equivalent controls.
+- Scheduled Video and Time-lapse Studio, including estimated capture completion, image source archives, retention and review.
+- Offline-first Sky Maps: linked sky/Earth views, local calculations from downloaded catalogues, satellite orbital downloads, configurable layers and observation-time reconstruction. Accuracy must be evaluated against observations and fresh orbital data.
+- Notifications, storage protections, backup/restore, user accounts, opt-in public sharing, in-app Help, and local/optional remote network services.
+- Password-protected software updates, same-version repair and administrator-controlled Moon Cheese service restoration.
 
-1. Commit the matching extracted source to GitHub Code **before** creating the v1.0.1.1 tag.
-2. Upload only `moon-cheese-uap-detector-v1.0.1.1.tar.gz` and its external `SHA256SUMS` to the new GitHub Release.
-3. Verify Delivery History (including empty and populated ledger), SMTP test errors, four visitor themes, public pages and the Cloudflare setup instructions.
-4. Check camera/detector monitoring, jobs, networking and preservation of settings on the physical Pi. Test normal Update/Repair with an administrator password when the latest stable release is available.
-5. Service-file repair is available from System Health with administrator-password confirmation and never blindly restarts the camera or unrelated services. Jim's intermittent Cloudflare Error 1033 and Gmail account require real-Pi diagnostics when available; documentation and generic errors cannot prove a fix to those external problems.
+## Active priorities: reliability and quality
 
-## Hardware status
+- Test and tune real night-sky detection against known samples of stars, satellites, aircraft, birds, meteors, moving clouds and camera noise. Measure false positives and missed events, not merely the number of clips.
+- Confirm camera metadata accuracy and compare 320×240 against 640×360 or 640×480 analysis on the reference Raspberry Pi 4. Keep a CPU-safe default.
+- Review recorded diagnostic reports from unattended night sessions. Improve rejection reasons and per-algorithm event attribution as real test data becomes available.
+- Improve zone-editor ergonomics, camera profiles, automatic day/night switching and night-image presentation without compromising raw recordings.
+- Validate Sky Maps object positions, satellite age/staleness warnings and historical map behaviour against external ephemerides and reference observations.
 
-Raspberry Pi 4 on 64-bit Raspberry Pi OS is the proven reference. Pi 5, Pi Zero 2 W / Raspberry Pi OS Lite, the iPhone Home Screen web app experience and other Debian-based SBCs have experimental/unverified aspects and must not be advertised as universally tested. Hardware-specific validation can continue after the Pi 4 stable baseline is accepted.
+## Upcoming — separately scoped work
 
-## Future roadmap
+- Calibrate the camera's actual field of view, lens distortion and optical centre so predicted object tracks can be accurately compared with event footage.
+- Evidence-based suggestion labels such as *Likely satellite*, with timestamp, position and uncertainty. A match will **never automatically delete** an observation.
+- Optional user-keyed, internet-dependent aircraft tracking and event-time archive. No mandatory ADS-B antennas or receivers; this will not compromise offline core detection.
+- A separate full-screen **16:9 Observation Studio** page for use with OBS, with optional celestial overlays. A continuous camera stream must reuse the existing camera pipeline rather than open a competing camera process.
+- Optional dew-heater controls after the actual PoE HAT, switching circuit and safe GPIO pins have been verified. No heater circuit is controlled by Moon Cheese v1.0.1.5.
 
-**Reserved for v2.0:** multi-device coordination/sharing; alternate mounted storage locations, NAS storage and related data migration. Do not introduce these into the first stable release.
+## Longer-term / v2.0 direction
 
-## Development rules
+- Optional coordination and collaboration across multiple Moon Cheese installations, with explicit sharing permissions and preservation of local copies.
+- Larger research and investigation workflows, including cross-location comparison, reproducible astronomical data snapshots and enhanced event correlation.
+- Possible alternate storage and NAS workflows with explicit migrations and data-protection design; not available by default in v1.0.1.5.
 
-Each authorised release is a complete install/upgrade/repair package; preserve credentials, databases, media, user configuration, cloud/network state and backups. Keep tests, test reports, development/upload instructions, unused oversized artwork and deployment secrets outside public installer archives and GitHub source. Older Version History entries and Help topics are retained.
+## Architectural principles
+
+1. **The detector must keep working offline.** Astronomical maps and future aircraft services must not be dependencies of the camera detection loop.
+2. **Preserve original evidence.** Processing, masking, identifications and overlays must not secretly alter original recordings.
+3. **Control resource usage on Raspberry Pi.** New algorithms require performance measurements and opt-in defaults.
+4. **Protect existing installations.** Updates preserve accounts, settings, credentials, media, service state and cached sky data.
+5. **Match the public release source to the binary/install archive.** Each version includes matching source and documentation in one versioned `.tar.gz`, with an external checksum.
+6. **Report uncertainty accurately.** Sky positions, aircraft and satellite interpretations are predictions, not automatic confirmation of an object's identity.

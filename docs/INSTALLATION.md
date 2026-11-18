@@ -1,36 +1,40 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.4 maintenance release uses the same one-command stable installation process.
+This guide describes the public stable installer, administrator credentials, initial setup and optional prerelease testing. The latest v1.0.1.5 release uses the existing versioned archive/checksum installation process.
 
 ## Before installation
 
-- Use a **separate microSD card or test Raspberry Pi** for prerelease installation, so an existing working installation is not at risk.
+- For **prerelease tests**, use a separate microSD card or test Raspberry Pi to protect your working installation.
 - Start with a supported, up-to-date **64-bit Raspberry Pi OS** installation, network access, and a compatible camera.
 - Raspberry Pi 4 is the tested reference hardware. Pi 5, Pi Zero 2 W / OS Lite and other compatible boards have **experimental or unverified** real-hardware support.
 - Internet access is required to fetch the GitHub bootstrap, the release and operating-system dependencies.
 - Review the [bootstrap source](../moon-cheese-install.sh) if you wish before executing any script with `sudo`.
 
-## Public prerelease test — anonymous, one command
+## Stable installation — latest public release
 
-This **already passed** on a clean test Pi against public `v0.9.9.5.3`. For reference, the version-pinned prerelease command is:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
-```
-
-This is a true anonymous GitHub bootstrap and installation test. No GitHub account, token, manual ZIP download, or WinSCP transfer is needed. It uses the GitHub API endpoint for the **exact release tag** because the normal `latest` endpoint excludes prereleases.
-
-If you later want to test a different published prerelease, change only the tag after `--prerelease` to its exact version.
-
-## Public stable installation — v1.0 and later
-
-For the latest published stable Moon Cheese release, use the permanent one-line command on a supported Raspberry Pi:
+On the Raspberry Pi, run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash
 ```
 
-This automatically selects GitHub's **latest stable** release. A repository containing only prereleases will not provide a stable release to this command.
+Immediately after installation, use the administrator login shown in the terminal, or retrieve the **original** generated credentials with:
+
+```bash
+sudo uapctl credentials
+```
+
+If the password was changed later, sign in with the changed password; this command only reports the originally generated credentials.
+
+### Optional version-pinned prerelease tests
+
+For maintainers testing an **existing published** public prerelease tag, use the same installer with `--prerelease TAG`. For example, the historical v0.9.9.5.3 anonymous fresh-install test used:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detector/main/moon-cheese-install.sh | sudo bash -s -- --prerelease v0.9.9.5.3
+```
+
+Normal installations should use the stable command above. Draft releases cannot be installed publicly, and the stable selector ignores prereleases.
 
 ## What the bootstrap does
 
@@ -68,12 +72,6 @@ For an existing installation, the dashboard's **Software updates** panel support
 
 For the maintainer's source and release preparation requirements, see [Publishing releases](RELEASING.md).
 
-## v1.0.1.2 acceptance check
-
-Also verify theme persistence without blue flashes, the new colour pop-out, service repair safeguards and a real manual long-exposure countdown on Photography.
-
-After the v1.0.1.2 stable release is public, verify the dashboard displays **v1.0.1.2**, the camera and photograph capture work, and administrator **Repair current version** rejects an incorrect password and succeeds with the current correct password. Keep the proven v1.0.0 SD card/backups until these checks pass. The stable bootstrap uses the same downloader and installer as the successful v0.9.9.5.3 prerelease test.
-
 ## Cloudflare Tunnel permissions and troubleshooting
 
 Tunnel access is optional. On the dashboard, expand System Administration → Network and remote access → Cloudflare Tunnel → Cloudflare setup guide. It explains where to obtain your Account ID and Zone ID, and to create a custom API token limited to your own Account and DNS Zone. Configure Account → Cloudflare Tunnel → Edit, Zone → DNS → Edit and Zone → Zone → Read. Enter these into Moon Cheese alongside your chosen subdomain; never share an API token or use a Global API Key. Cloudflare Error 1033 usually means a disconnected `cloudflared` connector or a DNS target pointing to the wrong tunnel; consult the same guide before changing any DNS resources.
@@ -88,10 +86,10 @@ The star/constellation, Sun/Moon/planet, world map, and optional deep-sky files 
 
 **Repair services** is intentionally always clickable for administrators under System Health → Software updates. It requires the current administrator password and interruption acknowledgement before reinstalling backed-up Moon Cheese-owned units and reasserting required service status. It can interrupt a running camera job, and does not stop competing third-party processes. Detector Settings now has **Detection zones**, disabled until explicitly enabled and saved; video remains uncropped.
 
-## Sky Maps v1.0.1.3 acceptance check
+## First-run checks for v1.0.1.5
 
-After uploading and installing the matching v1.0.1.3 GitHub release, verify Sky Maps search for ISS, Polaris, Mars, a deep-sky object and a NORAD number. Reset to Now and confirm the solar location is below the Scottish horizon at midnight. Compare the Sun's current location to a trusted astronomical chart and the day/night terminator to local time. Toggle the star-brightness slider, separate constellation names, day/night and twilight controls. The Earth map shows a sampled global set, not every satellite. The Raspberry Pi-confirmed Photography countdown and event links must continue working.
+After updating, confirm the detector and recordings are functioning, and verify that saved camera profiles and detection zones remain intact. In Detector Settings, try changing the frame rate while an unused Custom profile has a long exposure; only the active manual profile (or Day and Night for automatic switching) should be validated. Check that the selected analysis resolution matches the video aspect ratio at high detail.
 
-## Detection Reliability v1.0.1.4 acceptance
+Under Detection Methods & Sensitivity, open Live Detection Diagnostics. The new history begins collecting minute summaries after the upgrade; it cannot reconstruct diagnostics that were not previously stored. Select a UTC date to review the chart and export a CSV. The standard camera preview can now be set to Standard, Balanced or Detailed quality independently of the original recordings. Photography and advanced Time-lapse offer ISO-equivalent shortcuts; no new calibrated ISO hardware control is claimed.
 
-After installing the matching release and confirming normal camera preview/photography, visit Detector Settings → Detection Methods & Sensitivity. The previous General, Moving Sky Lights or Combined selection must be preserved as separate checkboxes. New MOG2/Transient methods must be unchecked unless you explicitly selected them. Verify per-engine resets do not alter camera exposure, gain or saved detection zones. Test a stable light moved slowly across the view, a brief bright streak under controlled conditions, and an actual night-sky scene while monitoring live diagnostics, false positives and CPU load. Custom Detection Zones now support red-only exclusion, explicit Finish shape and Trace Horizon; verify the saved masks do not crop full-resolution video. New dew-heater GPIO power control is not enabled pending verified wiring.
+For a planned Time-lapse, change its start and duration and check the estimated capture completion time. Rendering and archiving still take additional time. Validate higher analysis resolutions on your own Pi before leaving them unattended; new experimental detection engines can increase false positives.
