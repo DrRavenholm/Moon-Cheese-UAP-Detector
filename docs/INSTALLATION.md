@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.2 maintenance release uses the same one-command stable installation process.
+This page covers the intended **one-command public installation** and its prerelease testing variant. Moon Cheese v1.0.0 was publicly released on 7 November 2026 and the stable upgrade/repair path was verified on real Raspberry Pi hardware. The latest v1.0.1.3 maintenance release uses the same one-command stable installation process.
 
 ## Before installation
 
@@ -87,3 +87,7 @@ The star/constellation, Sun/Moon/planet, world map, and optional deep-sky files 
 ## Service Repair and detection zones (v1.0.1.2)
 
 **Repair services** is intentionally always clickable for administrators under System Health → Software updates. It requires the current administrator password and interruption acknowledgement before reinstalling backed-up Moon Cheese-owned units and reasserting required service status. It can interrupt a running camera job, and does not stop competing third-party processes. Detector Settings now has **Detection zones**, disabled until explicitly enabled and saved; video remains uncropped.
+
+## Sky Maps v1.0.1.3 acceptance check
+
+After uploading and installing the matching v1.0.1.3 GitHub release, verify Sky Maps search for ISS, Polaris, Mars, a deep-sky object and a NORAD number. Reset to Now and confirm the solar location is below the Scottish horizon at midnight. Compare the Sun's current location to a trusted astronomical chart and the day/night terminator to local time. Toggle the star-brightness slider, separate constellation names, day/night and twilight controls. The Earth map shows a sampled global set, not every satellite. The Raspberry Pi-confirmed Photography countdown and event links must continue working.

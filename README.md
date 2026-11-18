@@ -6,7 +6,7 @@ Moon Cheese UAP Detector combines automatic camera monitoring with tools to capt
 
 A detection is **not** identification, and Moon Cheese does not claim to prove that any recorded object or event is unexplained.
 
-> **Current prepared release: v1.0.1.2 (major feature update).** Moon Cheese v1.0.0 was publicly released on 7 November 2026. v1.0.1.2 introduces downloadable offline-first Sky Maps, a full-screen-compatible but not yet OBS-specific two-map explorer, per-dataset management, event-time mapping, configurable detection zones and updated Service Repair and Photography progress. Initial catalogue downloads and full Pi hardware/service acceptance have **not** yet been verified on the target Raspberry Pi.
+> **Current prepared release: v1.0.1.3 (Sky Maps correction update).** Moon Cheese v1.0.0 was publicly released on 7 November 2026. v1.0.1.2 introduces downloadable offline-first Sky Maps, a full-screen-compatible but not yet OBS-specific two-map explorer, per-dataset management, event-time mapping, configurable detection zones and updated Service Repair and Photography progress. The Photography countdown and event-time links were reported working on the Pi in v1.0.1.2; Sky Maps search, satellite data and ephemeris accuracy still require live acceptance after this correction.
 
 ## Install Moon Cheese
 
@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/DrRavenholm/Moon-Cheese-UAP-Detecto
 
 The bootstrap downloads the latest **stable** GitHub Release's complete Moon Cheese installation archive, checks the SHA-256 asset digest, validates the archive structure, then runs the archive's original `install.sh`. It is designed for clean installations as well as existing-installation upgrades; the main installer retains responsibility for backups and service setup.
 
-**This command selects the latest stable release** and does not require a GitHub account or access token. The stable installation path has been tested on Raspberry Pi hardware; check the v1.0.1.2 release notes for its specific acceptance status.
+**This command selects the latest stable release** and does not require a GitHub account or access token. The stable installation path has been tested on Raspberry Pi hardware; check the v1.0.1.3 release notes for its specific acceptance status.
 
 ### One-line installation — public prerelease testing
 

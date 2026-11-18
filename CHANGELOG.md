@@ -1,5 +1,18 @@
 # Moon Cheese UAP Detector — Release History
 
+## v1.0.1.3 — Sky Maps Accuracy and Usability Corrections
+**Date:** 18 November 2026
+
+- Corrected the object-search HTTP 500 caused by treating three-field deep-sky records as four-field star records. Search now returns a controlled JSON error if another server-side failure occurs.
+- Rebuilt the star catalogue selection to choose the brightest stars from the **complete** downloaded catalogue instead of truncating the first 6,500 rows; fixed highlighted deep-sky object lookup.
+- Introduced a star-magnitude slider (default 4.5), split constellation lines and names into independent layers, suppressed overlapping constellation labels and defaulted deep-sky symbols off for better readability.
+- Separated local-sky horizon filtering from satellite positions on the world map. The Earth map now shows a representative sample from the full catalogue; a searched satellite is included regardless of its local visibility. The map explains sampling rather than claiming to show all satellites.
+- Added optional whole-Earth day/night shading and civil, nautical and astronomical twilight bands, calculated from local JPL ephemeris results for the selected time; no extra online service or data is needed.
+- Added distinct LIVE, SELECTED TIME and PLAYBACK indicators. Reset to Now follows the current clock; manual dates and event links remain fixed; playback and searches ignore obsolete in-flight position responses.
+- Improved map API response/error handling and Help, retaining the Raspberry Pi-confirmed working Photography countdown, event-time links, detector, detection zones, downloads and service recovery from v1.0.1.2.
+- **Validation note:** offline unit and browser tests are not a substitute for live Raspberry Pi Skyfield ephemeris validation or actual satellite-data acceptance; verify accuracy on the installed Pi.
+
+
 ## v1.0.1.2 — Sky Maps, Detection Zones and Recovery Corrections
 **Released:** 17 November 2026
 

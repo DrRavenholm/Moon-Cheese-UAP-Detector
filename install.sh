@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.1.2: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1.3: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.1.2'
+VERSION='1.0.1.3'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
