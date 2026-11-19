@@ -15,3 +15,8 @@ The v1.0.1.2 Sky Maps downloader obtains astronomical data directly from third-p
 - **Skyfield** / Brandon Rhodes and contributors: astronomy and satellite-propagation calculations supplied separately through Raspberry Pi OS/Debian packages, https://rhodesmill.org/skyfield/ .
 
 Moon Cheese does not imply endorsement by any of these providers. No paid API or developer key is required for the listed astronomy sources. Future source availability, terms and formats can change.
+
+
+### Optional plate-solving components
+
+Moon Cheese v1.0.1.6 can optionally install the externally distributed ASTAP command-line solver (`astap-cli`) using the Raspberry Pi's signed Debian apt repositories and separately download the ASTAP W08 star-pattern index from the ASTAP project on SourceForge. These are **not distributed inside Moon Cheese's release archive**. Their own author/licence terms apply. Official project: https://www.hnsky.org/astap.htm ; index: https://sourceforge.net/projects/astap-program/files/star_databases/ . Offline solving is optional and never required for core monitoring.

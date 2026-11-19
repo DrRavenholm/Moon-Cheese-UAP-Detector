@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch Moon Cheese offline plate-solving requests
+
+[Path]
+PathExistsGlob=/var/lib/uap-detector/plate-solving/requests/*.json
+Unit=uap-plate-solving.service
+
+[Install]
+WantedBy=multi-user.target

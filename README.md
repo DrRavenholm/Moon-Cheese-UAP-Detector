@@ -2,7 +2,7 @@
 
 **Open-source sky monitoring, automatic detection, photography and investigation for Raspberry Pi.**
 
-Moon Cheese watches a connected camera for movement and moving points of light, saves event recordings with pre-event footage, and provides tools to review the evidence. You can also take full-resolution photographs, schedule videos and time-lapses, explore offline-first Sky Maps, and choose which observations to share publicly.
+Moon Cheese watches a connected camera for movement and moving points of light, saves event recordings with pre-event footage, and provides tools to review the evidence. You can also take full-resolution photographs, schedule videos and time-lapses, explore offline-first Sky Maps, optionally calibrate camera pointing from a photograph of stars, and choose which observations to share publicly.
 
 **An event is an observation, not proof of a UAP.** Moon Cheese does not automatically identify an aircraft, satellite or unexplained object; astronomical maps provide predictions to help investigations.
 
@@ -62,9 +62,15 @@ For an existing installation, use **Administration → System Health → Softwar
 
 **Repair services** is a separate administrator-authorised service restoration operation. It can interrupt the active camera and restart Moon Cheese-owned services; it never intentionally stops unrelated third-party applications. Do not invoke it in the middle of an important scheduled recording.
 
-If nothing is recorded, check the detector's status, event-storm protection, schedule, camera exposure/gain, detection zones and **Live Detection Diagnostics**. The latter includes recorded minute-by-minute summaries and CSV exports for the previous seven days after upgrading to v1.0.1.5. Adjust high-sensitivity detection modes experimentally; more events do not necessarily mean more genuine objects.
+If nothing is recorded, check the detector's status, event-storm protection, schedule, camera exposure/gain, detection zones and **Live Detection Diagnostics**. The latter includes recorded minute-by-minute summaries and CSV exports for the previous seven days. Adjust high-sensitivity detection modes experimentally; more events do not necessarily mean more genuine objects.
 
 Optional Cloudflare Tunnel setup is documented in the application's **Cloudflare setup guide**, including the scoped Account/Zone token permissions. Never publish Cloudflare credentials or tokens.
+
+## Offline camera calibration
+
+**Sky Maps → Camera Calibration** is administrator-only. It supports both **Use saved photograph** (including a shortcut on each saved Photograph Gallery detail page) and **Take calibration photo now**. First authorise installation of the optional Debian ASTAP command-line solver, then download its small W08 wide-field star index from **Sky Maps → Data & Updates**. Those external files are downloaded only when requested and are **not included in the Moon Cheese installer**. The star solver needs no account or paid API, and then works entirely offline.
+
+A successful solve identifies the celestial coordinates in the photograph, and can estimate camera-centre bearing, elevation and image rotation when location, UTC capture time and the locally downloaded ephemeris are available. Review the solution and explicitly save it; Moon Cheese does **not** silently overwrite your existing camera profiles or manual orientation. Wide-angle lens distortion still needs separate calibration before precise edge overlays or satellite identification. Cloudy images or images with too few stars may not solve.
 
 ## Roadmap and documentation
 

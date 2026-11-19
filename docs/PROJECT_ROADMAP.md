@@ -1,6 +1,6 @@
 # Moon Cheese UAP Detector — Project Roadmap
 
-**Updated for v1.0.1.5 · 18 November 2026**
+**Updated for v1.0.1.6 · 19 November 2026**
 
 This roadmap distinguishes working features from features under development or proposed. It is not a troubleshooting diary, release validation report or promise of completion dates. For individual shipped changes, see [CHANGELOG](../CHANGELOG.md) and [VERSION_HISTORY](../VERSION_HISTORY.md).
 
@@ -12,7 +12,7 @@ This roadmap distinguishes working features from features under development or p
 - Configurable 320×240 or appropriately aspect-matched 640×360 / 640×480 detector analysis. Performance and sensitivity at high resolution still need actual Pi benchmarking.
 - Photography, long-exposure progress, full-resolution image download, browser investigation tools and gain/ISO-equivalent controls.
 - Scheduled Video and Time-lapse Studio, including estimated capture completion, image source archives, retention and review.
-- Offline-first Sky Maps: linked sky/Earth views, local calculations from downloaded catalogues, satellite orbital downloads, configurable layers and observation-time reconstruction. Accuracy must be evaluated against observations and fresh orbital data.
+- Offline-first Sky Maps: linked sky/Earth views, local calculations from downloaded catalogues, satellite orbital downloads, configurable layers and observation-time reconstruction. Optional administrator-only offline ASTAP Camera Calibration from existing or newly captured star photographs; accuracy still needs Pi validation.
 - Notifications, storage protections, backup/restore, user accounts, opt-in public sharing, in-app Help, and local/optional remote network services.
 - Password-protected software updates, same-version repair and administrator-controlled Moon Cheese service restoration.
 
@@ -26,17 +26,17 @@ This roadmap distinguishes working features from features under development or p
 
 ## Upcoming — separately scoped work
 
-- Calibrate the camera's actual field of view, lens distortion and optical centre so predicted object tracks can be accurately compared with event footage.
+- Extend optional plate solutions into validated wide-angle lens-distortion and optical-centre calibration so predicted object tracks can be accurately compared with event footage (the current solution measures mainly the centre and approximate orientation).
 - Evidence-based suggestion labels such as *Likely satellite*, with timestamp, position and uncertainty. A match will **never automatically delete** an observation.
 - Optional user-keyed, internet-dependent aircraft tracking and event-time archive. No mandatory ADS-B antennas or receivers; this will not compromise offline core detection.
 - A separate full-screen **16:9 Observation Studio** page for use with OBS, with optional celestial overlays. A continuous camera stream must reuse the existing camera pipeline rather than open a competing camera process.
-- Optional dew-heater controls after the actual PoE HAT, switching circuit and safe GPIO pins have been verified. No heater circuit is controlled by Moon Cheese v1.0.1.5.
+- Optional dew-heater controls after the actual PoE HAT, switching circuit and safe GPIO pins have been verified. No heater circuit is controlled by Moon Cheese v1.0.1.6.
 
 ## Longer-term / v2.0 direction
 
 - Optional coordination and collaboration across multiple Moon Cheese installations, with explicit sharing permissions and preservation of local copies.
 - Larger research and investigation workflows, including cross-location comparison, reproducible astronomical data snapshots and enhanced event correlation.
-- Possible alternate storage and NAS workflows with explicit migrations and data-protection design; not available by default in v1.0.1.5.
+- Possible alternate storage and NAS workflows with explicit migrations and data-protection design; not available by default in v1.0.1.6.
 
 ## Architectural principles
 

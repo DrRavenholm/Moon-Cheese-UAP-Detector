@@ -1,3 +1,14 @@
+## v1.0.1.6 — Offline Camera Plate Solving
+**Date:** 19 November 2026
+
+- Added a private **Sky Maps → Camera Calibration** page with **Take calibration photo now** (using the existing single-owner photography capture) and **Use saved photograph**.
+- Optional, explicitly approved ASTAP command-line installation from the configured Debian package repository, and a separate small W08 wide-field star-index download via the existing Sky Maps Data & Updates worker. No bundled solver/index or API keys.
+- Isolated plate-solving systemd worker processes saved photographs away from detector and web requests. The dashboard shows queued, running, failed and solved states.
+- Successful ASTAP solutions provide celestial centre coordinates and an image WCS. With a detector location and downloaded ephemeris, Moon Cheese also estimates camera-centre bearing/elevation and image-up heading.
+- Calibration is saved **only after administrator review**, independently of the existing manually selected camera rotation, bearing and camera profiles. The wide-angle lens is not assumed distortion-free; corner-accurate stream overlays remain future work.
+- Includes Help, documentation, source installer and new systemd units. Current detector algorithms, media, users, notifications, cached Sky Maps and Sky Data remain unchanged.
+- **Acceptance:** offline tests validate result parsing, safe file selection, queue workflow and page controls; live solver accuracy and NoIR night-image suitability require testing on the actual Raspberry Pi.
+
 ## v1.0.1.5 — Detector Diagnostics, Camera Controls and Documentation
 **Date:** 18 November 2026
 

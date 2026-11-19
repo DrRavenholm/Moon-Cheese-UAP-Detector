@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.1.5: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1.6: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.1.5'
+VERSION='1.0.1.6'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
@@ -21,21 +21,21 @@ fi
 for file in dashboard.py detector.py common.py observation_jobs.py photography.py camera_profiles.py \
             draft_preview.py hardware.py scheduling.py delivery.py notifications.py \
             network_setup.py network_worker.py network_ui.py sky_map_engine.py sky_map_data.py detection_zones.py \
-            detection_methods.py advanced_detection.py detector_diagnostics.py detection_history.py camera_iso.py; do
+            detection_methods.py advanced_detection.py detector_diagnostics.py detection_history.py camera_iso.py plate_solving.py plate_solving_worker.py plate_setup_worker.py plate_calibration_pages.py; do
   [[ -f "uap/$file" ]] || fail "Incomplete archive: missing uap/$file"
 done
 for file in uap-dashboard.service uap-detector.service uap-notifications.service \
             uap-notifications.timer uap-cleanup.service uap-cleanup.timer \
             uap-power-action.service uap-power-action.path \
             uap-network-worker.service uap-network-worker.path uap-ddns.service uap-ddns.timer \
-            uap-network-recovery.service uap-network-recovery.timer uap-cloudflared.service uap-cloudflared-candidate.service uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer; do
+            uap-network-recovery.service uap-network-recovery.timer uap-cloudflared.service uap-cloudflared-candidate.service uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer uap-plate-solving.service uap-plate-solving.path uap-plate-setup.service uap-plate-setup.path; do
   [[ -f "systemd/$file" ]] || fail "Incomplete archive: missing systemd/$file"
 done
 for file in npm/compose.yaml npm/provision_npm.py; do
   [[ -f "$file" ]] || fail "Incomplete archive: missing $file"
 done
 for file in uap/network_ui.js uap/network_confirm.js uap/camera_reset.js uap/investigator.js \
-            uap/detection_settings.js uap/detection_zones.js uap/iso_controls.js; do [[ -f "$file" ]] || fail "Incomplete archive: missing $file"; done
+            uap/detection_settings.js uap/detection_zones.js uap/iso_controls.js uap/plate_calibration.js; do [[ -f "$file" ]] || fail "Incomplete archive: missing $file"; done
 python3 -m compileall -q uap || fail 'Package Python source does not compile.'
 if command -v node >/dev/null 2>&1; then
   for file in uap/*.js; do node --check "$file" >/dev/null; done
@@ -207,7 +207,7 @@ done
 for name in uap-dashboard.service uap-detector.service uap-cleanup.service uap-cleanup.timer \
             uap-notifications.service uap-notifications.timer uap-power-action.service uap-power-action.path \
             uap-network-worker.service uap-network-worker.path uap-ddns.service uap-ddns.timer \
-            uap-network-recovery.service uap-network-recovery.timer uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer; do
+            uap-network-recovery.service uap-network-recovery.timer uap-software-update.service uap-software-update.path uap-sky-data.service uap-sky-data.path uap-sky-data.timer uap-plate-solving.service uap-plate-solving.path uap-plate-setup.service uap-plate-setup.path; do
   if [[ ! -e "/etc/systemd/system/$name" ]]; then
     install -m 0644 "systemd/$name" "/etc/systemd/system/$name"
   fi
@@ -256,7 +256,7 @@ EOF
 systemctl daemon-reload
 info 'Activating dashboard and background services'
 systemctl enable uap-dashboard.service uap-detector.service >/dev/null
-systemctl enable --now uap-cleanup.timer uap-notifications.timer uap-power-action.path uap-network-worker.path uap-network-recovery.timer uap-software-update.path uap-sky-data.timer uap-sky-data.path >/dev/null
+systemctl enable --now uap-cleanup.timer uap-notifications.timer uap-power-action.path uap-network-worker.path uap-network-recovery.timer uap-software-update.path uap-sky-data.timer uap-sky-data.path uap-plate-solving.path uap-plate-setup.path >/dev/null
 systemctl restart uap-dashboard.service
 # The detector engine in v0.9.9.2 is unchanged in v0.9.9.3; no camera restart then.
 if (( ! EXISTING )); then

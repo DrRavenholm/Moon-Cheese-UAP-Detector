@@ -1,0 +1,9 @@
+[Unit]
+Description=Install optional ASTAP from signed Debian package repository
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/python3 /opt/uap-detector/uap/plate_setup_worker.py
+TimeoutStartSec=750

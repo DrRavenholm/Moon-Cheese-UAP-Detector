@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch explicit Moon Cheese ASTAP installation request
+
+[Path]
+PathExists=/var/lib/uap-detector/plate-solving/install-request.json
+Unit=uap-plate-setup.service
+
+[Install]
+WantedBy=multi-user.target

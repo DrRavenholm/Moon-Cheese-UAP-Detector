@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This guide describes the public stable installer, administrator credentials, initial setup and optional prerelease testing. The latest v1.0.1.5 release uses the existing versioned archive/checksum installation process.
+This guide describes the public stable installer, administrator credentials, initial setup and optional prerelease testing. The latest v1.0.1.6 release uses the existing versioned archive/checksum installation process.
 
 ## Before installation
 
@@ -93,3 +93,15 @@ After updating, confirm the detector and recordings are functioning, and verify 
 Under Detection Methods & Sensitivity, open Live Detection Diagnostics. The new history begins collecting minute summaries after the upgrade; it cannot reconstruct diagnostics that were not previously stored. Select a UTC date to review the chart and export a CSV. The standard camera preview can now be set to Standard, Balanced or Detailed quality independently of the original recordings. Photography and advanced Time-lapse offer ISO-equivalent shortcuts; no new calibrated ISO hardware control is claimed.
 
 For a planned Time-lapse, change its start and duration and check the estimated capture completion time. Rendering and archiving still take additional time. Validate higher analysis resolutions on your own Pi before leaving them unattended; new experimental detection engines can increase false positives.
+
+## Optional offline plate solving (v1.0.1.6)
+
+Sky Maps → Camera Calibration is separate from the detector and normal Sky Maps. After installation, an administrator can explicitly approve installing `astap-cli` from the configured signed Debian/Raspberry Pi OS repository. The package installation runs as a bounded maintenance action; it is **not** triggered automatically by upgrading Moon Cheese.
+
+Download the official compact W08 wide-field star index using **Sky Maps → Camera Calibration → Download W08 star index**, or in Sky Maps → Data & Updates. The W08 zip is fetched from the ASTAP project's SourceForge release and its internal binary structure is verified before it replaces the cached file. Network access is only necessary for the initial package/index downloads.
+
+Choose an existing full-resolution saved Moon Cheese photograph, or take a new one on a clear night. The latter briefly interrupts monitoring in the same way as Photography. The unprivileged plate-solving worker runs asynchronously and may fail if clouds, windows, short exposures, optical distortion or insufficient stars prevent a confident match. It doesn't operate the camera.
+
+A successful plate solve can produce the star-field RA/Dec and, with valid detector coordinates and the downloaded JPL ephemeris, an approximate camera pointing direction and image rotation. **Review before Save calibration**. The saved result does not rewrite manual orientation, camera profiles, or rotate existing media. Wide-angle edge calibration remains future work.
+
+If automatic optional package installation fails, inspect `sudo journalctl -u uap-plate-setup -n 40 --no-pager` and the Pi's configured apt repositories. If solving fails, inspect `sudo journalctl -u uap-plate-solving -n 40 --no-pager` and try a clearer photograph. The existing detector remains operational.
