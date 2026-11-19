@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Moon Cheese UAP Detector v1.0.1.6: fresh installation, safe upgrade or same-version repair.
+# Moon Cheese UAP Detector v1.0.1.7: fresh installation, safe upgrade or same-version repair.
 # Camera/OS capability checks rather than Raspberry Pi 4-only restrictions.
 # Existing recordings, credentials and network/proxy configuration are preserved.
 set -Eeuo pipefail
 export DEBIAN_FRONTEND=noninteractive
-VERSION='1.0.1.6'
+VERSION='1.0.1.7'
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 APP=/opt/uap-detector/uap
 ETC=/etc/uap-detector
@@ -21,7 +21,7 @@ fi
 for file in dashboard.py detector.py common.py observation_jobs.py photography.py camera_profiles.py \
             draft_preview.py hardware.py scheduling.py delivery.py notifications.py \
             network_setup.py network_worker.py network_ui.py sky_map_engine.py sky_map_data.py detection_zones.py \
-            detection_methods.py advanced_detection.py detector_diagnostics.py detection_history.py camera_iso.py plate_solving.py plate_solving_worker.py plate_setup_worker.py plate_calibration_pages.py; do
+            detection_methods.py advanced_detection.py detector_diagnostics.py detection_history.py camera_iso.py plate_solving.py plate_solving_worker.py plate_setup_worker.py plate_calibration_pages.py plate_overlay.py; do
   [[ -f "uap/$file" ]] || fail "Incomplete archive: missing uap/$file"
 done
 for file in uap-dashboard.service uap-detector.service uap-notifications.service \

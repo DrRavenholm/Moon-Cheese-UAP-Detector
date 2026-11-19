@@ -1,6 +1,6 @@
 # Install Moon Cheese UAP Detector
 
-This guide describes the public stable installer, administrator credentials, initial setup and optional prerelease testing. The latest v1.0.1.6 release uses the existing versioned archive/checksum installation process.
+This guide describes the public stable installer, administrator credentials, initial setup and optional prerelease testing. The latest v1.0.1.7 release uses the existing versioned archive/checksum installation process.
 
 ## Before installation
 
@@ -98,7 +98,7 @@ For a planned Time-lapse, change its start and duration and check the estimated 
 
 Sky Maps → Camera Calibration is separate from the detector and normal Sky Maps. After installation, an administrator can explicitly approve installing `astap-cli` from the configured signed Debian/Raspberry Pi OS repository. The package installation runs as a bounded maintenance action; it is **not** triggered automatically by upgrading Moon Cheese.
 
-Download the official compact W08 wide-field star index using **Sky Maps → Camera Calibration → Download W08 star index**, or in Sky Maps → Data & Updates. The W08 zip is fetched from the ASTAP project's SourceForge release and its internal binary structure is verified before it replaces the cached file. Network access is only necessary for the initial package/index downloads.
+Download the official compact W08 wide-field star index using **Sky Maps → Camera Calibration → Download W08 star index**, or in Sky Maps → Data & Updates. The W08 ZIP comes from the ASTAP project's SourceForge release. Moon Cheese validates the official `w08_0101.001` member and record count before replacing the cached index. If SourceForge returns an HTML download page, download the ZIP in your web browser and use **Upload & validate W08 ZIP** on the Calibration page. No short-lived mirror link or user API key is required. Network access is only necessary for the initial package/index downloads.
 
 Choose an existing full-resolution saved Moon Cheese photograph, or take a new one on a clear night. The latter briefly interrupts monitoring in the same way as Photography. The unprivileged plate-solving worker runs asynchronously and may fail if clouds, windows, short exposures, optical distortion or insufficient stars prevent a confident match. It doesn't operate the camera.
 

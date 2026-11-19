@@ -1,3 +1,14 @@
+## v1.0.1.7 — W08 Reliability & Visual Camera Calibration
+**Date:** 19 November 2026
+
+- Corrected the optional W08 binary filename and validated genuine official ZIP records. The downloader detects SourceForge HTML pages instead of mistaking them for star-index archives.
+- Added an administrator-only **Upload & validate W08 ZIP** alternative, allowing browser-downloaded files to be installed safely without hard-coding temporary SourceForge mirror links. Sky datasets stay outside release archives and survive upgrades.
+- Added a visual calibration review of the actual saved photograph: optional independently cross-checked reference-star circles and names, overlay-opacity control, celestial-north direction, camera centre, camera bearing/elevation, and expandable WCS details. Stars are marked only when a downloaded catalogue and detected image sources actually agree; no decorative/imaginary matched stars are shown.
+- Added an approximate saved-camera footprint to the Sky Maps local sky chart, restricted to the location associated with its calibration. Wide-angle distortion and image-edge accuracy are **not** claimed solved.
+- Linked high-detail detection analysis selections to the recording aspect ratio, preserving the lightweight 320×240 option and saved settings.
+- Preserved the existing camera/detector, recording, notifications, network configuration, observations and separate manual camera-orientation settings.
+- **Acceptance:** SourceForge mirror delivery and real ASTAP solving require Raspberry Pi and star-rich photo tests; offline code and interface tests are not a substitute for measured calibration accuracy.
+
 ## v1.0.1.6 — Offline Camera Plate Solving
 **Date:** 19 November 2026
 

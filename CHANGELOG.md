@@ -1,3 +1,11 @@
+## v1.0.1.7 — Plate-solving reliability and visual review (19 November 2026)
+
+- Fixed ASTAP W08 official ZIP layout and added validated manual ZIP upload.
+- Added photographic overlay comparison with independently verified star positions where available, clear warnings and review-before-save.
+- Added approximate camera field-of-view preview on Sky Maps from a saved plate solution.
+- Corrected high-detail detector analysis aspect-ratio selection.
+- Optional catalogue and solver files remain outside the installer; camera and detector operations are preserved.
+
 # Moon Cheese UAP Detector — Release History
 
 ## v1.0.1.6 — Offline Camera Plate Solving

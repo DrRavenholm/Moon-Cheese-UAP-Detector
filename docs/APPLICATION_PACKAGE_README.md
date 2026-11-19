@@ -1,12 +1,12 @@
-# Moon Cheese UAP Detector v1.0.0
+# Moon Cheese UAP Detector v1.0.1.7
 
-**First public stable release — complete installation, upgrade and repair package.**
+**Current complete installation, upgrade and repair package (v1.0.1.7).**
 Official GitHub: https://github.com/DrRavenholm/Moon-Cheese-UAP-Detector  
 Licence: GNU General Public License v3.0 (`LICENSE`)
 
 Moon Cheese UAP Detector is an independent self-hosted, camera-based sky observation system. It records motion and moving bright points, provides live monitoring and full-resolution photographs, Scheduled Video, Time-lapse Studio, event investigations, notification controls and optional remote access. A detection is not identification and does not prove an object is unidentified.
 
-## What's new in v1.0.0
+## Historical first public stable release (v1.0.0)
 
 - First public stable release on the tested v0.9.9.5.3 codebase. **No changes to camera, recording, networking or data-preservation logic.**
 - Uses the same tested GitHub bootstrap to install the **latest stable** release in one command without a GitHub token.
