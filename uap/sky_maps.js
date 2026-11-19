@@ -9,9 +9,9 @@
  let lat=Number(root.dataset.lat),lon=Number(root.dataset.lon);
  let catalogue={stars:[],lines:[],constellations:[],deep_sky:[],world:[]};
  let positions={planets:[],satellites:[],track:[],solar:null};
- const skyLayers=new Set(['stars','constellation_lines','planets','satellites']);
+ const skyLayers=new Set(['stars','constellation_lines','planets','satellites','camera_fov']);
  const earthLayers=new Set(['land','satellites','track','detector','daynight','twilight']);
- let twilightCache=null;
+ let twilightCache=null,calibration=null;
  const deg=Math.PI/180;
  function out(message){$('sky-status').textContent=message;}
  function drawCircle(ctx,x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
@@ -96,6 +96,28 @@
      for(const sat of positions.satellites||[]){const q=polar(sat.az,sat.alt,sky);if(!q)continue;
        drawCircle(ctx,...q,selected===sat.id?5:2,'#58daee');
        if(selected===sat.id){ring(ctx,q);ctx.fillStyle='#b4f4ff';ctx.fillText(sat.name,q[0]+9,q[1]-7);}
+     }
+   }
+   if(skyLayers.has('camera_fov')&&calibration&&Number.isFinite(Number(calibration.bearing_deg))&&Number.isFinite(Number(calibration.elevation_deg))){
+     const az=Number(calibration.bearing_deg),alt=Number(calibration.elevation_deg),centre=polar(az,alt,sky);
+     if(centre){ctx.strokeStyle='#65e7a9';ctx.fillStyle='#65e7a9';ctx.lineWidth=2;
+       ctx.beginPath();ctx.arc(...centre,7,0,Math.PI*2);ctx.stroke();
+       ctx.font='12px sans-serif';ctx.fillText('Camera centre',centre[0]+10,centre[1]-9);
+       const wide=Number(calibration.approx_hfov_deg),tall=Number(calibration.approx_vfov_deg),heading=Number(calibration.image_up_heading_deg);
+       if(wide>1&&tall>1&&wide<180&&tall<150&&Number.isFinite(heading)){
+         // Local tangent-plane approximation only. Lens distortion and the sky
+         // projection away from the optical centre are not yet calibrated.
+         const a=heading*deg,coords=[];
+         for(const [x,y] of [[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]]){
+           const east=x*wide/2*Math.cos(a)+y*tall/2*Math.sin(a);
+           const north=-x*wide/2*Math.sin(a)+y*tall/2*Math.cos(a);
+           const adjustedAlt=Math.max(0,Math.min(90,alt+north));
+           const adjustedAz=(az+east/Math.max(.18,Math.cos(alt*deg))+360)%360;
+           coords.push(polar(adjustedAz,adjustedAlt,sky));
+         }
+         if(coords.every(Boolean)){ctx.beginPath();coords.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));
+           ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([]);}
+       }
      }
    }
    const hit=selected.match(/^(star|deep_sky):(.+)$/);
@@ -209,6 +231,17 @@
    finally{busy=false;if(version!==dataVersion)maybeLoad(true);}
  }
  async function load(){
+   try{
+     const data=await getJson('/sky-maps/calibration/footprint');
+     if(data.available){
+       // Never project a saved calibration onto a relocated detector or old
+       // observation from a different geographical location.
+       const samePlace=Number.isFinite(Number(data.latitude))&&Number.isFinite(Number(data.longitude))&&
+         Math.abs(Number(data.latitude)-lat)<.002&&Math.abs(Number(data.longitude)-lon)<.002;
+       if(samePlace){calibration=data;$('sky-calibration-status').textContent='Saved star-based pointing available. Green dashed field of view is approximate; wide-lens distortion remains uncalibrated.';}
+       else $('sky-calibration-status').textContent='Saved camera calibration is for a different location. Recalibrate here before using the field-of-view outline.';
+     }
+   }catch(e){/* Ordinary Sky Maps viewers need not access admin calibration. */}
    try{catalogue=await getJson('/sky-maps/catalogue');paint();await maybeLoad(true);}
    catch(error){out('Catalogue unavailable: '+error.message+' Open Sky Maps → Data & Updates to check the downloads.');paint();}
  }

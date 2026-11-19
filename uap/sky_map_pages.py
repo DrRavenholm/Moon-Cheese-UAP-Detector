@@ -16,6 +16,7 @@ SKY_MAPS = '''
       <label class="checkline"><input type="checkbox" data-sky-layer="constellation_names"> Constellation names</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="planets"> Sun, Moon and planets</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="satellites"> Satellites</label>
+      <label class="checkline"><input type="checkbox" data-sky-layer="camera_fov"> Saved camera calibration / approximate field of view (admin)</label>
       <label class="checkline"><input type="checkbox" data-sky-layer="deep_sky"> Bright deep-sky objects</label>
     </div></details>
     <details class="sky-layers"><summary>☷ Earth map layers</summary><div>
@@ -36,7 +37,8 @@ SKY_MAPS = '''
   <p class="note" id="sky-status" role="status">Reading local sky catalogues…</p>
 </section>
 <div class="sky-map-grid">
-  <section class="panel"><h2>Sky above the detector</h2><p class="note">All-sky view · North at top · Zenith at centre · Horizon at edge</p><p class="note" id="sky-sun-status">Sun position is available after downloading the planetary ephemeris.</p><canvas id="sky-local" class="sky-map-canvas" aria-label="Calculated sky positions"></canvas></section>
+  <section class="panel"><h2>Sky above the detector</h2><p class="note">All-sky view · North at top · Zenith at centre · Horizon at edge</p><p class="note" id="sky-sun-status">Sun position is available after downloading the planetary ephemeris.</p>
+    <p class="note" id="sky-calibration-status">Camera outline requires a saved plate solution; edges are approximate for wide lenses.</p><canvas id="sky-local" class="sky-map-canvas" aria-label="Calculated sky positions"></canvas></section>
   <section class="panel"><h2>Earth &amp; satellite tracking</h2><p class="note">Selected orbital objects and approximate predicted ground tracks</p><canvas id="sky-earth" class="sky-map-canvas" aria-label="Satellite ground track and world map"></canvas></section>
 </div>
 <section class="panel"><h2>Shared timeline</h2>

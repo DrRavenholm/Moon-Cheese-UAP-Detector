@@ -1496,6 +1496,7 @@ def settings():
         <option value="640x360" {% if cfg.analysis_resolution == '640x360' %}selected{% endif %}>640 × 360 — HD and Full HD cameras / higher CPU</option>
         <option value="640x480" {% if cfg.analysis_resolution == '640x480' %}selected{% endif %}>640 × 480 — VGA cameras / higher CPU</option>
       </select>
+      <p class="note" id="analysis-compatibility-note">High-detail analysis is automatically matched to recording aspect ratio when that setting changes.</p>
       <p class="note">High-detail analysis requires the same aspect ratio as the recorded video. Pixel/area and motion thresholds are scaled from the original 320×240 reference, but retest sensitivity on the Pi. Larger frames increase CPU use; defaults remain 320×240 on upgrade.</p>
       <details class="panel setting-section"><summary>General Motion — thresholds</summary><div class="setting-content"><div class="options">
       <div><label>Pixel difference threshold (1–255)</label><input type="number" name="pixel_threshold" min="1" max="255" value="{{ cfg.pixel_threshold }}" required></div>
@@ -3187,6 +3188,39 @@ def plate_calibration_index():
     try:queue_download('plate_solver')
     except (ValueError,OSError):return redirect(url_for('plate_calibration',error='download'))
     return redirect(url_for('plate_calibration',setup='index'))
+
+@app.route('/sky-maps/calibration/upload-w08',methods=['POST'])
+def plate_calibration_upload_w08():
+    if not is_admin():abort(403)
+    check_csrf()
+    from sky_map_data import import_w08_zip
+    try:
+        if request.content_length is None or request.content_length>5_500_000:
+            raise ValueError('W08 upload exceeds the 5 MB safety limit.')
+        upload=request.files.get('archive')
+        if not upload or not upload.filename.lower().endswith('.zip'):
+            raise ValueError('Select the official W08 .zip archive downloaded from ASTAP.')
+        payload=upload.stream.read(5_000_001)
+        if len(payload)>5_000_000:raise ValueError('W08 ZIP exceeds the 5 MB limit.')
+        import_w08_zip(payload)
+        return redirect(url_for('plate_calibration',setup='imported'),code=303)
+    except (ValueError,OSError) as exc:
+        app.logger.warning('W08 manual import rejected: %s',exc)
+        return redirect(url_for('plate_calibration',error='import'),code=303)
+
+
+@app.route('/sky-maps/calibration/footprint')
+def plate_calibration_footprint():
+    if not is_admin():abort(403)
+    from plate_solving import _read,CALIBRATION
+    saved=_read(CALIBRATION)
+    if not saved:return jsonify(available=False)
+    return jsonify(available=True,bearing_deg=saved.get('bearing_deg'),
+        elevation_deg=saved.get('elevation_deg'),image_up_heading_deg=saved.get('image_up_heading_deg'),
+        approx_hfov_deg=saved.get('approx_hfov_deg'),approx_vfov_deg=saved.get('approx_vfov_deg'),
+        latitude=saved.get('latitude'),longitude=saved.get('longitude'),
+        solved_utc=saved.get('solved_utc'),note='Approximate centre and field of view; wide-lens edge distortion is not calibrated.')
+
 
 @app.route('/sky-maps/calibration/capture',methods=['POST'])
 def plate_calibration_capture():

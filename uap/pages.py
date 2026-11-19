@@ -16,6 +16,15 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.1.7','title':'Plate Solver Reliability and Visual Calibration Review','date':'19 Nov 2026',
+   'summary':'Correct W08 archive handling, enable verified offline upload and visual camera calibration review, and simplify detector analysis resolution selection.',
+   'changes':[
+     'Correct the genuine ASTAP W08 archive member and record validation. Detect SourceForge HTML download pages and allow administrators to upload a verified official W08 ZIP instead.',
+     'Review an actual saved Moon Cheese star photograph with an opacity slider, genuine catalogue/photo cross-check circles where available, optional names, image centre and celestial north. Missing cross-checks are explicitly reported.',
+     'Show an approximate, location-matched camera field-of-view outline on the local Sky Map after saving calibration. Wide-angle lens distortion is not assumed calibrated.',
+     'Automatically reconcile high-detail detection analysis resolution when switching video aspect ratios, without changing the preserved lightweight default.',
+     'Preserve existing detector, camera profiles, evidence, accounts, networking, astronomical datasets, and photo capture behaviour. Real ASTAP solves require Pi acceptance testing.'
+   ]},
   {'version':'1.0.1.6','title':'Offline Camera Plate Solving','date':'19 Nov 2026',
    'summary':'Private star-pattern calibration from a saved photograph or a fresh Moon Cheese still; optional ASTAP/W08 setup independent of monitoring.',
    'details':[

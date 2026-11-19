@@ -25,7 +25,7 @@ CALIBRATION = ROOT / 'camera-calibration.json'
 SETUP_REQUEST = ROOT / 'install-request.json'
 SETUP_STATUS = ROOT / 'install-status.json'
 TOKEN = re.compile(r'^[0-9a-f]{32}$')
-W08 = SKY_DATA / 'plate_solver' / 'w08.001'
+W08 = SKY_DATA / 'plate_solver' / 'w08_0101.001'
 
 
 def _write(path, obj):
@@ -151,7 +151,7 @@ def solve(token, field_height, *, executable=None, root=None, timeout=150):
     exe=executable or solver_path()
     if not exe:raise ValueError('ASTAP command-line solver is not installed')
     dbroot=Path(root) if root is not None else W08.parent
-    if not (dbroot/'w08.001').is_file():raise ValueError('ASTAP W08 wide-field star index is missing')
+    if not (dbroot/'w08_0101.001').is_file():raise ValueError('ASTAP W08 wide-field star index is missing')
     exposure_date=photograph_date(token,source)
     with tempfile.TemporaryDirectory(prefix='mc-plates-',dir=str(ROOT)) as tmp:
         prefix=str(Path(tmp)/'solution')
@@ -166,6 +166,10 @@ def solve(token, field_height, *, executable=None, root=None, timeout=150):
             # Do not expose arbitrary subprocess diagnostics to visitors.
             raise ValueError('ASTAP did not produce a plate-solving result (exit '+str(completed.returncode)+')')
         solution=parse_ini(ini.read_text(encoding='utf-8',errors='replace')[:20000])
+    # Optional genuine reference-star crosscheck (not ASTAP's internal quad list).
+    # Missing star catalogues must not turn a valid ASTAP solution into a failure.
+    from plate_overlay import crosscheck
+    overlay=crosscheck(source,solution)
     lat,lon=None,None
     try:
         from sky_map_engine import coordinates
@@ -192,6 +196,7 @@ def solve(token, field_height, *, executable=None, root=None, timeout=150):
             'dec_deg':round(solution['CRVAL2'],6),**orientation,
             'rotation_deg':solution.get('CROTA2'),'approx_hfov_deg':approx_hfov,'approx_vfov_deg':approx_vfov,
             'wcs':{key:value for key,value in solution.items() if key!='CROTA2'},
+            'overlay':overlay,
             'warning':('The sky location was solved, but local bearing/elevation are unavailable. Check detector location and download the JPL planetary ephemeris. ' if orientation['bearing_deg'] is None else '') + 'Wide-angle lens distortion is not yet calibrated. Angular measurements are approximate, especially near image edges. Existing camera settings have not changed.'}
 
 
@@ -219,7 +224,7 @@ def save_calibration(jobid):
     photo_source(payload['token'])
     selected={k:payload[k] for k in ('token','capture_utc','solved_utc','latitude','longitude',
         'ra_deg','dec_deg','bearing_deg','elevation_deg','image_up_heading_deg','rotation_deg',
-        'approx_hfov_deg','approx_vfov_deg','wcs','warning')}
+        'approx_hfov_deg','approx_vfov_deg','wcs','overlay','warning')}
     selected['saved_utc']=datetime.now(timezone.utc).isoformat()
     _write(CALIBRATION,selected)
     return selected

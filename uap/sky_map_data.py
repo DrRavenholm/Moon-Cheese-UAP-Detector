@@ -6,6 +6,7 @@ No data or public API key ships in the installer. Files belong under the persist
 import csv
 import hashlib
 import io
+import struct
 import zipfile
 import json
 import os
@@ -36,7 +37,7 @@ SOURCES = {
     'satellites': {'label':'Satellites and orbital objects','files':{'active.csv':'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=CSV'}, 'max':20_000_000},
     'world': {'label':'World map','files':{'world.geojson':'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson'}, 'max':5_000_000},
     'deep_sky': {'label':'Bright deep-sky objects','files':{n:RAW+n for n in ('messier.json','dsos.bright.json')}, 'max':10_000_000},
-    'plate_solver': {'label':'Plate solving: W08 wide-field star index','files':{'w08.001':'https://downloads.sourceforge.net/project/astap-program/star_databases/w08_star_database_mag08_astap.zip'}, 'max':5_000_000},
+    'plate_solver': {'label':'Plate solving: W08 wide-field star index','files':{'w08_0101.001':'https://downloads.sourceforge.net/project/astap-program/star_databases/w08_star_database_mag08_astap.zip'}, 'max':5_000_000},
 }
 
 
@@ -89,8 +90,11 @@ def dataset_status():
 
 def _verify(kind, name, data):
     if kind=='plate_solver':
-        if name!='w08.001' or len(data)!=4+41246*12 or int.from_bytes(data[:4],'little')!=41246:
-            raise ValueError('ASTAP W08 index is incomplete or invalid.')
+        if name!='w08_0101.001' or len(data)<4 or len(data)>2_000_000:
+            raise ValueError('Invalid ASTAP W08 index filename or size.')
+        count=int.from_bytes(data[:4],'little')
+        if not 40000<=count<=50000 or len(data)!=4+count*12:
+            raise ValueError('ASTAP W08 index has an invalid record count or binary length.')
     elif kind=='planets':
         if len(data)<20_000_000 or not data.startswith(b'DAF/SPK '):
             raise ValueError('JPL ephemeris file has an invalid SPK header or size.')
@@ -108,6 +112,55 @@ def _verify(kind, name, data):
             raise ValueError('Star catalogue does not contain the expected GeoJSON stars.')
         if name=='world.geojson' and (not isinstance(obj,dict) or obj.get('type')!='FeatureCollection' or len(obj.get('features',[]))<5):
             raise ValueError('World-map coastline catalogue is invalid.')
+
+
+def parse_w08_archive(archive_bytes):
+    """Validate one real ASTAP W08 ZIP member without extracting arbitrary paths.
+
+    The genuine 2026 W08 archive contains w08_0101.001 and 41,265 records.
+    Record count is read from the binary header to permit future valid revisions.
+    """
+    if len(archive_bytes)>5_000_000:
+        raise ValueError('W08 ZIP is larger than the accepted download limit.')
+    if not archive_bytes.startswith(b'PK\x03\x04'):
+        if archive_bytes.lstrip()[:100].lower().startswith((b'<!doctype',b'<html',b'<head')):
+            raise ValueError('SourceForge returned a download webpage, not the W08 ZIP. Use the manual ZIP upload option.')
+        raise ValueError('Download is not an ASTAP W08 ZIP archive. Try uploading the original ZIP from your browser.')
+    try:
+        with zipfile.ZipFile(io.BytesIO(archive_bytes)) as archive:
+            members=archive.infolist()
+            if len(members)!=1 or members[0].filename!='w08_0101.001':
+                raise ValueError('W08 ZIP has an unexpected filename or additional entries.')
+            member=members[0]
+            if member.file_size>2_000_000 or (member.external_attr>>16)&0o170000==0o120000:
+                raise ValueError('W08 archive member is unsafe or too large.')
+            data=archive.read(member)
+            if archive.testzip():raise ValueError('W08 ZIP failed its integrity check.')
+    except (zipfile.BadZipFile,RuntimeError,EOFError) as exc:
+        raise ValueError('W08 ZIP is corrupt or incomplete.') from exc
+    _verify('plate_solver','w08_0101.001',data)
+    return data
+
+
+def import_w08_zip(archive_bytes):
+    """Manual upload from an administrator; preserve existing data on failure."""
+    data=parse_w08_archive(archive_bytes)
+    target=ROOT/'plate_solver'/'w08_0101.001'
+    target.parent.mkdir(parents=True,exist_ok=True,mode=0o750)
+    part=target.parent/('.'+target.name+'.'+secrets.token_hex(8)+'.part')
+    try:
+        with part.open('xb') as out:
+            os.chmod(part,0o600)
+            out.write(data);out.flush();os.fsync(out.fileno())
+        os.replace(part,target)
+    finally:
+        part.unlink(missing_ok=True)
+    updated=manifest()
+    now=datetime.now(timezone.utc).isoformat(timespec='seconds')
+    updated['plate_solver']={'state':'installed','attempt_utc':now,'download_utc':now,
+                             'source_type':'manual_upload','sha256':{target.name:hashlib.sha256(data).hexdigest()},'error':''}
+    _write_json(MANIFEST,updated)
+    return {'name':target.name,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
 
 
 def download(kind):
@@ -149,16 +202,9 @@ def download(kind):
                         out.write(buf)
                     out.flush();os.fsync(out.fileno())
             if kind=='plate_solver':
-                try:
-                    with zipfile.ZipFile(io.BytesIO(temp.read_bytes())) as archive:
-                        names=[entry for entry in archive.namelist() if Path(entry).name.lower()=='w08.001']
-                        if len(names)!=1 or archive.getinfo(names[0]).file_size>2_000_000:
-                            raise ValueError('W08 download has an unexpected archive layout.')
-                        contents=archive.read(names[0])
-                    _verify(kind,name,contents)
-                    temp.write_bytes(contents)  # Verified data only; no archive extraction paths.
-                except (zipfile.BadZipFile,KeyError,RuntimeError) as exc:
-                    raise ValueError('W08 download is not a valid ASTAP star database archive.') from exc
+                contents=parse_w08_archive(temp.read_bytes())
+                with temp.open('wb') as out:
+                    out.write(contents);out.flush();os.fsync(out.fileno())
             else:
                 _verify(kind,name,temp.read_bytes())
         # Commit only after every file in this dataset has downloaded and validated.

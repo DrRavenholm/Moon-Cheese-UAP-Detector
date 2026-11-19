@@ -6,6 +6,19 @@ const defaults=JSON.parse(panel.dataset.defaults),presets=JSON.parse(panel.datas
 const fields={general:['pixel_threshold','min_changed_pixels'],sky_lights:['sky_brightness','sky_confirm_frames','sky_min_area','sky_max_area','sky_min_movement'],
  mog2:['mog2_threshold','mog2_min_area','mog2_confirm_frames'],transient:['transient_threshold','transient_min_area','transient_min_length']};
 const all=Object.keys(fields).flatMap(k=>fields[k]);const preset=$('detector_preset'),note=$('detection-reset-result');
+// The recording stream and high-detail analysis must share their aspect ratio.
+// Keep a user-selected 320×240 (original low-CPU mode) unchanged.
+const recordResolution=document.getElementById('camera_resolution');
+const analysisResolution=panel.querySelector('[name="analysis_resolution"]');
+function syncResolution(){if(!recordResolution||!analysisResolution)return;
+ const matched=recordResolution.value==='640x480'?'640x480':'640x360';
+ for(const option of analysisResolution.options){option.disabled=option.value!=='320x240'&&option.value!==matched;}
+ if(analysisResolution.value!=='320x240'&&analysisResolution.value!==matched)analysisResolution.value=matched;
+ const status=document.getElementById('analysis-compatibility-note');
+ if(status)status.textContent='High-detail analysis automatically matches the recording aspect ratio: '+matched+'. Standard 320×240 remains available at any recording resolution.';
+}
+if(recordResolution){recordResolution.addEventListener('change',syncResolution);syncResolution();}
+
 function apply(fieldsToSet,values){for(const name of fieldsToSet){const input=panel.querySelector(`[name="${name}"]`);if(input&&Object.prototype.hasOwnProperty.call(values,name)){input.value=values[name];input.dispatchEvent(new Event('change',{bubbles:true}));}}}
 function updateMethods(){const selected=[...panel.querySelectorAll('[name="detection_methods"]:checked')];const warning=$('detection-method-warning');
  warning.textContent=selected.length?'Enabled methods share one recorder. New experimental methods can generate noise alerts.':'Select at least one method before saving.';
