@@ -28,6 +28,8 @@ ALLOWED = (
     'uap-software-update.service', 'uap-software-update.path',
     'uap-cloudflared.service', 'uap-cloudflared-candidate.service',
     'uap-sky-data.service', 'uap-sky-data.path', 'uap-sky-data.timer',
+    'uap-plate-solving.service', 'uap-plate-solving.path',
+    'uap-plate-setup.service', 'uap-plate-setup.path',
 )
 
 

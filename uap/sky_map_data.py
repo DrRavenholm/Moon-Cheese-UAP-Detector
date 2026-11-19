@@ -6,6 +6,7 @@ No data or public API key ships in the installer. Files belong under the persist
 import csv
 import hashlib
 import io
+import zipfile
 import json
 import os
 import secrets
@@ -22,7 +23,11 @@ ROOT = DATA / 'sky-map-data'
 REQUESTS = ROOT / 'requests'
 MANIFEST = ROOT / 'manifest.json'
 CONFIG = ROOT / 'preferences.json'
-ALLOW_HOSTS = {'raw.githubusercontent.com', 'naif.jpl.nasa.gov', 'celestrak.org', 'www.celestrak.org'}
+ALLOW_HOSTS = {'raw.githubusercontent.com', 'naif.jpl.nasa.gov', 'celestrak.org', 'www.celestrak.org', 'downloads.sourceforge.net', 'sourceforge.net'}
+
+
+def approved_host(host):
+    return host in ALLOW_HOSTS or bool(host and host.endswith('.dl.sourceforge.net'))
 RAW = 'https://raw.githubusercontent.com/ofrohn/d3-celestial/master/data/'
 SOURCES = {
     'stars': {'label':'Stars and star names','files':{'stars.8.json': RAW+'stars.8.json', 'starnames.json':RAW+'starnames.json'}, 'max':18_000_000},
@@ -31,6 +36,7 @@ SOURCES = {
     'satellites': {'label':'Satellites and orbital objects','files':{'active.csv':'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=CSV'}, 'max':20_000_000},
     'world': {'label':'World map','files':{'world.geojson':'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson'}, 'max':5_000_000},
     'deep_sky': {'label':'Bright deep-sky objects','files':{n:RAW+n for n in ('messier.json','dsos.bright.json')}, 'max':10_000_000},
+    'plate_solver': {'label':'Plate solving: W08 wide-field star index','files':{'w08.001':'https://downloads.sourceforge.net/project/astap-program/star_databases/w08_star_database_mag08_astap.zip'}, 'max':5_000_000},
 }
 
 
@@ -82,7 +88,10 @@ def dataset_status():
 
 
 def _verify(kind, name, data):
-    if kind=='planets':
+    if kind=='plate_solver':
+        if name!='w08.001' or len(data)!=4+41246*12 or int.from_bytes(data[:4],'little')!=41246:
+            raise ValueError('ASTAP W08 index is incomplete or invalid.')
+    elif kind=='planets':
         if len(data)<20_000_000 or not data.startswith(b'DAF/SPK '):
             raise ValueError('JPL ephemeris file has an invalid SPK header or size.')
     elif kind=='satellites':
@@ -119,7 +128,7 @@ def download(kind):
     try:
         for name,url in item['files'].items():
             parts=urlparse(url)
-            if parts.scheme!='https' or parts.hostname not in ALLOW_HOSTS:
+            if parts.scheme!='https' or not approved_host(parts.hostname):
                 raise ValueError('Astronomical data source is not approved.')
             req=urllib.request.Request(url,headers={'User-Agent':'MoonCheeseSkyMap/1.0 (cached daily or on demand)','Accept':'application/octet-stream,application/json,text/csv,*/*'})
             temp=ROOT/kind/('.'+name+'.'+secrets.token_hex(8)+'.part')
@@ -127,7 +136,7 @@ def download(kind):
             newfiles.append((name,temp))
             size=0
             with urllib.request.urlopen(req,timeout=45) as resp:
-                if urlparse(resp.geturl()).hostname not in ALLOW_HOSTS:
+                if not approved_host(urlparse(resp.geturl()).hostname):
                     raise ValueError('Astronomical data download redirected to an unapproved host.')
                 if resp.status!=200:raise ValueError('Astronomical data provider returned HTTP '+str(resp.status))
                 with temp.open('xb') as out:
@@ -139,7 +148,19 @@ def download(kind):
                         if size>item['max']:raise ValueError('Astronomical data exceeds its size limit.')
                         out.write(buf)
                     out.flush();os.fsync(out.fileno())
-            _verify(kind,name,temp.read_bytes())
+            if kind=='plate_solver':
+                try:
+                    with zipfile.ZipFile(io.BytesIO(temp.read_bytes())) as archive:
+                        names=[entry for entry in archive.namelist() if Path(entry).name.lower()=='w08.001']
+                        if len(names)!=1 or archive.getinfo(names[0]).file_size>2_000_000:
+                            raise ValueError('W08 download has an unexpected archive layout.')
+                        contents=archive.read(names[0])
+                    _verify(kind,name,contents)
+                    temp.write_bytes(contents)  # Verified data only; no archive extraction paths.
+                except (zipfile.BadZipFile,KeyError,RuntimeError) as exc:
+                    raise ValueError('W08 download is not a valid ASTAP star database archive.') from exc
+            else:
+                _verify(kind,name,temp.read_bytes())
         # Commit only after every file in this dataset has downloaded and validated.
         # Multi-file datasets retain old files until each replacement is ready.
         checks={}

@@ -311,14 +311,14 @@ input,select,textarea{background:var(--theme-field);border-color:var(--edge);col
     {% if user %}
       <a class="button nav-bell" href="{{ url_for('notices_page') }}" aria-label="Notifications: {{ unread_notices }} unread" title="Notifications"><span aria-hidden="true">🔔</span>{% if unread_notices %} <span class="nav-count">{{ unread_notices }}</span>{% endif %}</a>
       <details class="nav-menu nav-account" data-nav-menu><summary class="button nav-link">Account ▾</summary><div class="nav-dropdown"><a href="{{ url_for('account') }}">My account</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
-      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a><a href="{{url_for('sky_maps')}}">Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Sky Map Data &amp; Updates</a>{% endif %}{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
+      <details class="nav-mobile" data-nav-menu><summary class="button" aria-label="Open menu">☰ Menu</summary><div class="mobile-panel"><a href="{{ url_for('home') }}">Dashboard</a>{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a><a href="{{ url_for('notices_page') }}">Notifications ({{ unread_notices }})</a><a href="{{url_for('sky_maps')}}">Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Sky Map Data &amp; Updates</a><a href="{{url_for('plate_calibration')}}">Camera Calibration</a>{% endif %}{% if admin %}<a href="{{ url_for('settings') }}">Settings</a><a href="{{ url_for('users') }}">Users & Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a>{% endif %}{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}<a href="{{ url_for('account') }}">My account</a><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a><form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Sign out</button></form></div></details>
     {% endif %}
     </div>
   </div>
   {% if user %}<nav class="site-nav" aria-label="Main navigation">
     <a class="button nav-link nav-dashboard" href="{{ url_for('home') }}">▦ Dashboard</a>
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">◉ Observations ▾</summary><div class="nav-dropdown">{% if admin %}<a href="{{ url_for('live_camera') }}">Photography</a>{% endif %}<a href="{{ url_for('home') }}#recordings">Recordings</a><a href="{{ url_for('calendar_page') }}">Calendar</a><a href="{{ url_for('photo_gallery') }}">Photograph Gallery</a><a href="{{url_for('jobs_list',kind='scheduled_video')}}">Scheduled Video</a><a href="{{url_for('jobs_list',kind='timelapse')}}">Time-lapse Studio</a>{% if public_enabled and admin %}<a href="{{ url_for('public_page') }}" target="_blank" rel="noopener">Public page ↗</a>{% endif %}</div></details>
-    <details class="nav-menu" data-nav-menu><summary class="button nav-link">☾ Sky Maps ▾</summary><div class="nav-dropdown"><a href="{{url_for('sky_maps')}}">Explore Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Data &amp; Updates</a>{% endif %}</div></details>
+    <details class="nav-menu" data-nav-menu><summary class="button nav-link">☾ Sky Maps ▾</summary><div class="nav-dropdown"><a href="{{url_for('sky_maps')}}">Explore Sky Maps</a>{% if admin %}<a href="{{url_for('sky_maps_data')}}">Data &amp; Updates</a><a href="{{url_for('plate_calibration')}}">Camera Calibration</a>{% endif %}</div></details>
     {% if admin %}<details class="nav-menu" data-nav-menu><summary class="button nav-link">⚙ Administration ▾</summary><div class="nav-dropdown"><a href="{{ url_for('settings') }}">Camera &amp; Detector Settings</a><a href="{{ url_for('users') }}">Users &amp; Access</a><a href="{{ url_for('system_page') }}">System Health</a><a href="{{ url_for('storage_page') }}">Storage Management</a><a href="{{ url_for('system_admin') }}">System Administration</a></div></details>{% endif %}
     <details class="nav-menu" data-nav-menu><summary class="button nav-link">▤ Information ▾</summary><div class="nav-dropdown"><a href="{{ url_for('help_page') }}">Help</a><a href="{{ url_for('history') }}">Version History</a><a href="{{url_for('about_moon_cheese')}}">About Moon Cheese</a></div></details>
   </nav>{% endif %}
@@ -395,7 +395,7 @@ HELP_CHAPTER_BY_ENDPOINT = {
     'storage_page':'Storage Management', 'job_storage':'Storage Management', 'system_admin':'System Administration',
     'users':'Accounts and access', 'edit_user':'Accounts and access', 'account':'Accounts and access',
     'public_page':'Public observation pages', 'public_job_detail':'Public observation pages',
-    'sky_maps':'Sky Maps', 'sky_maps_data':'Sky Maps', 'history':'Version history', 'about_moon_cheese':'About Moon Cheese', 'network_action':'System Administration', 'network_confirm':'System Administration',
+    'sky_maps':'Sky Maps', 'sky_maps_data':'Sky Maps', 'plate_calibration':'Camera calibration', 'history':'Version history', 'about_moon_cheese':'About Moon Cheese', 'network_action':'System Administration', 'network_confirm':'System Administration',
 }
 
 
@@ -3135,6 +3135,100 @@ def sky_maps_schedule():
     try:save_prefs(int(request.form.get('hour','')),int(request.form.get('minute','')),request.form.get('auto')=='on')
     except (ValueError,OSError):return redirect(url_for('sky_maps_data',error='invalid'),code=303)
     return redirect(url_for('sky_maps_data',saved=1),code=303)
+
+
+
+# Private offline plate solving. No additional camera owner is created.
+@app.route('/sky-maps/calibration')
+def plate_calibration():
+    if not is_admin():abort(403)
+    from plate_calibration_pages import CALIBRATION_PAGE
+    from plate_solving import setup_status
+    available=photos()
+    shortlist=available[:80]
+    selected=request.args.get('photo','')
+    if selected and any(item['token']==selected for item in available):
+        if not any(item['token']==selected for item in shortlist):
+            shortlist.append(next(item for item in available if item['token']==selected))
+    else:selected=''
+    return render_page(CALIBRATION_PAGE,title='Camera Calibration',support=setup_status(),saved_photos=shortlist,
+                       initial_photo=selected,setup_error=request.args.get('error',''),setup_notice=request.args.get('setup',''))
+
+@app.route('/assets/plate-calibration.js')
+def plate_calibration_js():
+    if not is_admin():abort(403)
+    return send_file(Path(__file__).with_name('plate_calibration.js'),mimetype='application/javascript',max_age=3600)
+
+@app.route('/sky-maps/calibration/install',methods=['POST'])
+def plate_calibration_install():
+    if not is_admin():abort(403)
+    check_csrf()
+    if request.form.get('agree')!='yes':
+        return redirect(url_for('plate_calibration',error='ack'))
+    if not verify_current_admin_password(request.form.get('password','')):
+        return redirect(url_for('plate_calibration',error='password'))
+    from plate_solving import SETUP_REQUEST, solver_path, _write
+    if not solver_path():
+        if SETUP_REQUEST.exists():return redirect(url_for('plate_calibration',error='busy'))
+        _write(SETUP_REQUEST,{'action':'install-astap'})
+    return redirect(url_for('plate_calibration',setup='queued'))
+
+@app.route('/sky-maps/calibration/support')
+def plate_calibration_support():
+    if not is_admin():abort(403)
+    from plate_solving import setup_status
+    return jsonify(setup_status())
+
+@app.route('/sky-maps/calibration/index',methods=['POST'])
+def plate_calibration_index():
+    if not is_admin():abort(403)
+    check_csrf()
+    from sky_map_data import queue_download
+    try:queue_download('plate_solver')
+    except (ValueError,OSError):return redirect(url_for('plate_calibration',error='download'))
+    return redirect(url_for('plate_calibration',setup='index'))
+
+@app.route('/sky-maps/calibration/capture',methods=['POST'])
+def plate_calibration_capture():
+    if not is_admin():abort(403)
+    check_csrf()
+    try:
+        exposure=float(request.form.get('exposure_s','8'))
+        gain=float(request.form.get('gain','8'))
+        if not math.isfinite(exposure) or not 0.5<=exposure<=60 or not math.isfinite(gain) or not 1<=gain<=16:
+            raise ValueError('Choose an exposure of 0.5–60 seconds and analogue gain of 1–16×')
+        if oj.busy_soon(grace_seconds=max(25,exposure+20)):
+            return jsonify(error='Scheduled camera work is too close for a calibration photograph.'),409
+        token=queue_capture({'mode':'manual','format':'jpg','exposure_ms':exposure*1000,
+                             'gain':gain,'focus':'infinity','awb':'auto'})
+        return jsonify(token=token),202
+    except ValueError as exc:return jsonify(error=str(exc)),400
+    except OSError:
+        app.logger.exception('Cannot queue calibration photograph')
+        return jsonify(error='Camera could not queue the photograph; check monitoring health'),503
+
+@app.route('/sky-maps/calibration/solve',methods=['POST'])
+def plate_calibration_solve():
+    if not is_admin():abort(403)
+    check_csrf()
+    from plate_solving import queue_solve
+    try:return jsonify(job=queue_solve(request.form.get('token',''),field_height=float(request.form.get('field_height','67')))),202
+    except (ValueError,OSError) as exc:return jsonify(error=str(exc)),400
+
+@app.route('/sky-maps/calibration/status/<jobid>')
+def plate_calibration_status(jobid):
+    if not is_admin():abort(403)
+    from plate_solving import result
+    try:return jsonify(result(jobid))
+    except ValueError as exc:return jsonify(error=str(exc)),404
+
+@app.route('/sky-maps/calibration/save',methods=['POST'])
+def plate_calibration_save():
+    if not is_admin():abort(403)
+    check_csrf()
+    from plate_solving import save_calibration
+    try:return jsonify(saved=save_calibration(request.form.get('job','')))
+    except ValueError as exc:return jsonify(error=str(exc)),400
 
 @app.route('/settings/detection-zones',methods=['GET','POST'])
 def detection_zones_api():

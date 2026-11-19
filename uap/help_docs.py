@@ -480,7 +480,7 @@ def help_html():
         ('Time-lapse Studio',['Time-lapse Studio','Time-lapse Studio — corrections','Time-lapse storage planning']),
         ('Photograph Gallery',['Photograph Gallery']),
         ('Public observation pages',['Public observation pages'])]),
-      ('Sky Maps', [('Explore sky & Earth',['Sky Maps exploration']),('Data & Updates',['Sky Maps data & updates'])]),
+      ('Sky Maps', [('Explore sky & Earth',['Sky Maps exploration']),('Data & Updates',['Sky Maps data & updates']),('Camera Calibration',['Offline plate solving'])]),
       ('Administration', [
         ('Camera & Detector Settings',['Camera settings','Event-storm protection','Detection zones']),
         ('Accounts and access',['Accounts and access']),
@@ -549,6 +549,7 @@ GUIDE.extend([('Local network addresses and Tunnel cleanup', [
 
 # v1.0.1.2 — new chapters are placed in the appropriate navigation groups.
 GUIDE.extend([
+ ('Offline plate solving', [('Camera Calibration', 'Sky Maps → Camera Calibration offers both Take calibration photo now and Use saved photograph. Install ASTAP (Debian package) and download the W08 wide-field star index once. The optional setup requires an administrator password. Select a full-resolution photograph containing identifiable stars and solve offline; the result reports celestial coordinates and, with a planetary ephemeris and detector location, camera-centre bearing/elevation plus image orientation. An initial solve is not automatically written into camera controls; review and Save calibration. Wide-angle distortion still requires separate verification for precise corner overlays. The solver does not identify moving objects.')]),
  ('Sky Maps exploration', [
   ('Local sky and Earth', 'Sky Maps → Explore Sky Maps displays a local all-sky chart for the detector coordinates beside an Earth satellite map. Both use the selected UTC moment. The sky chart shows stars, constellations, the Sun, Moon, planets, optional deep-sky objects and predicted satellites when their datasets are installed. The Earth satellite dots are a representative global sample, not every object; searching includes any chosen satellite.'),
   ('Find a sky object', 'Use Object search for a planet, named star, deep-sky object, satellite name or NORAD catalogue number. Select the result to highlight it in the sky chart and, for satellites, the Earth map with predicted ground track. A planet or star has no satellite ground track.'),

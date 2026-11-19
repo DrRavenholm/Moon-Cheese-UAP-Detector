@@ -16,6 +16,17 @@ HELP += """<section class='panel' id='sky-lights'><h2>11. Moving sky lights</h2>
 
 # Changelog is bundled with each release; all sites see the same entries.
 RELEASES = [
+  {'version':'1.0.1.6','title':'Offline Camera Plate Solving','date':'19 Nov 2026',
+   'summary':'Private star-pattern calibration from a saved photograph or a fresh Moon Cheese still; optional ASTAP/W08 setup independent of monitoring.',
+   'details':[
+     'Add Sky Maps → Camera Calibration as a separate administrator-only page. Choose an existing full-resolution Moon Cheese photograph or take a new calibration still using the existing exclusive camera worker.',
+     'Install optional astap-cli through the signed Debian package repository with explicit administrator approval, and download the compact W08 star index separately through Sky Maps Data & Updates. Neither is bundled with the application archive.',
+     'Run plate solving in an unprivileged, camera-independent background service, never as a long-running web request or a second camera owner.',
+     'Read verified ASTAP solution data (RA/Dec and WCS). When location, photograph time and planetary ephemeris are available, show estimated camera-centre bearing, elevation and image-up direction.',
+     'Save solved calibration only after administrator review, without changing existing manual camera orientation or rotation. Keep lens-distortion correction and accurate full-frame sky overlays as subsequent work.',
+     'Preserve the detector, Photography, Time-lapse Studio, Sky Maps, accounts, stored observations and all cached astronomical datasets.',
+     'Offline parser, queue and interface tests do not guarantee the wide NoIR sensor images can be solved on the Pi. Real ASTAP installation and a star-rich photograph remain device acceptance tests.'
+   ]},
   {'version':'1.0.1.5','title':'Camera Control, Detector History and Documentation','date':'18 Nov 2026',
    'summary':'Profile-aware frame-rate validation, selectable detector analysis resolution, seven-day overnight diagnostics, ISO-equivalent presentation and Time-lapse completion estimates.',
    'details':[

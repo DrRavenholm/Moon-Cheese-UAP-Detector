@@ -82,7 +82,7 @@ GALLERY = '''<h1>Photograph Gallery</h1>
 
 PHOTO_DETAIL = '''<p><a href="{{url_for('photo_gallery')}}">← Photograph Gallery</a></p><h1>{{detail.title or 'Photograph '+photo.token[:8]}}</h1>
 <div class="cols"><section class="panel"><h2>Photograph</h2><img class="photo-detail-image" src="{{url_for('photo_original',token=photo.token)}}" alt="{{detail.title or 'Photograph'}}"><p class="note">{{photo.format|upper}} · {{'%.1f'|format(photo.bytes/1048576)}} MB · {{photo.modified|localdt}}</p>
-<a class="button" href="{{url_for('photo_original',token=photo.token,download='1')}}">Download original</a></section>
+<a class="button" href="{{url_for('photo_original',token=photo.token,download='1')}}">Download original</a> {% if admin %}<a class="button" href="{{url_for('plate_calibration',photo=photo.token)}}">Calibrate camera from these stars</a>{% endif %}</section>
 <section class="panel"><h2>Photograph details</h2>{% if admin %}<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="details">
 <label>Title <input maxlength="120" name="title" value="{{detail.title}}"></label><label>Notes <textarea name="note" maxlength="8000">{{detail.note}}</textarea></label>
 <label class="checkline"><input type="checkbox" name="public" value="1" {% if detail.public %}checked{% endif %}>Share photograph on the public page</label>
@@ -107,7 +107,7 @@ GALLERY = '''<h1>Photograph Gallery</h1>
 
 PHOTO_DETAIL = '''<p><a href="{{url_for('photo_gallery')}}">← Photograph Gallery</a></p><h1>{{detail.title or 'Photograph '+photo.token[:8]}}</h1>
 <div class="cols"><section class="panel"><h2>Photograph</h2><img class="photo-detail-image" src="{{url_for('photo_original',token=photo.token)}}" alt="{{detail.title or 'Photograph'}}"><p class="note">{{photo.format|upper}} · {{'%.1f'|format(photo.bytes/1048576)}} MB · {{photo.modified|localdt}}</p>
-<a class="button" href="{{url_for('photo_original',token=photo.token,download='1')}}">Download original</a></section>
+<a class="button" href="{{url_for('photo_original',token=photo.token,download='1')}}">Download original</a> {% if admin %}<a class="button" href="{{url_for('plate_calibration',photo=photo.token)}}">Calibrate camera from these stars</a>{% endif %}</section>
 <section class="panel"><h2>Photograph details</h2>{% if admin %}<form method="post"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="action" value="details">
 <label>Title <input maxlength="120" name="title" value="{{detail.title}}"></label><label>Notes <textarea name="note" maxlength="8000">{{detail.note}}</textarea></label>
 <label class="checkline"><input type="checkbox" name="public" value="1" {% if detail.public %}checked{% endif %}>Share photograph on the public page</label>
